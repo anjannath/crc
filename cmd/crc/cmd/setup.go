@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	log "github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/preflight"
+	"github.com/code-ready/crc/pkg/os"
 	"github.com/spf13/cobra"
 )
 
@@ -20,6 +22,8 @@ var setupCmd = &cobra.Command{
 }
 
 func runSetup(arguments []string) {
-	// TODO: check if user is root before launching setup
+	if !os.CheckUserPrivilages() {
+		log.Fatal("You need to run this command as root, try prefixing sudo to the command.")
+	}
 	preflight.SetupHost()
 }
