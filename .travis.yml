@@ -4,5 +4,5 @@ go:
 - 1.11.6
 
 script:
-- make
-- make cross
+- GO111MODULE=on make
+- GO111MODULE=on make cross
