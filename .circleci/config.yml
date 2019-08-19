@@ -45,3 +45,64 @@ jobs:
     - store_artifacts:
         path: ~/project/out
         destination: crc
+
+  build_docs:
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+    - checkout
+    - run:
+        name: Update repo
+        command: sudo apt -y update
+    - run:
+        name: Add podman ppa
+        command: sudo add-apt-repository -y ppa:projectatomic/ppa && sudo apt -y update
+    - run:
+        name: Update repo
+        command: sudo apt -y update
+    - run:
+        name: Install podman
+        command: sudo apt -y install podman
+    - run:
+        name: Check podman
+        command: podman info
+    - run:
+        name: Make build_docs
+        command: make build_docs
+    - persist_to_workspace:
+        root: docs/
+        paths: build
+
+  docs_deploy:
+    docker:
+      - image: node:8.10.0
+    steps:
+    - checkout
+    - attach_workspace:
+        at: docs/build
+    - add_ssh_keys:
+        fingerprints:
+          - "c5:64:d4:79:8f:c7:9b:80:b8:16:71:20:57:6b:8c:94"
+    - run:
+        name: Install and configure dependencies
+        command: |
+          npm install -g --silent gh-pages@2.0.1
+          git config user.email "codereadycontainers@gmail.com"
+          git config user.name "crc-bot"
+    - run:
+        name: Deploy docs to gh-pages branch
+        command: gh-pages -d docs/build/* -s *.html --message "[skip ci] Docs update"
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build
+      - build_docs
+      - docs_deploy:
+          requires:
+            - build
+            - build_docs
+          filters:
+            branches:
+              only: master
