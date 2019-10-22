@@ -22,10 +22,14 @@ const (
 func checkVersionOfWindowsUpdate() (bool, error) {
 	windowsReleaseId := `(Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ReleaseId).ReleaseId`
 
-	stdOut, _, _ := powershell.Execute(windowsReleaseId)
+	stdOut, stdErr, err := powershell.Execute(windowsReleaseId)
+	if err != nil {
+		logging.Debugf("%s: %s: %s", stdOut, stdErr, err.Error())
+	}
 	yourWindowsReleaseId, err := strconv.Atoi(strings.TrimSpace(stdOut))
 
 	if err != nil {
+		logging.Debug(err.Error())
 		return false, errors.New("Failed to get Windows release id")
 	}
 
