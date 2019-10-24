@@ -10,6 +10,8 @@ require (
 	github.com/code-ready/goodhosts v0.0.0-20190712111040-f090f3f77c26
 	github.com/code-ready/machine v0.0.0-20190904103148-0fde37b5d95b
 	github.com/docker/go-units v0.4.0
+	github.com/gorilla/mux v1.7.3
+	github.com/gorilla/rpc v1.2.0
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/mattn/go-colorable v0.0.9
