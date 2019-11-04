@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -91,6 +92,10 @@ func InitLogrus(logLevel string) {
 	for k, v := range logrus.StandardLogger().Hooks {
 		originalHooks[k] = v
 	}
+}
+
+func LogWriter() io.Writer {
+	return logrus.StandardLogger().Writer()
 }
 
 func Info(args ...interface{}) {
