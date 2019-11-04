@@ -6,9 +6,9 @@ import (
 	"github.com/code-ready/crc/pkg/crc/machine"
 )
 
-type ClusterStatus struct {}
+type CrcDaemon string
 
-func (t *ClusterStatus) GetStatus(r *http.Request, Args *machine.ClusterStatusConfig, Response *machine.ClusterStatusResult) error {
+func (t *CrcDaemon) GetStatus(r *http.Request, Args *machine.ClusterStatusConfig, Response *machine.ClusterStatusResult) error {
 	logging.Debugf("Args: %#v", Args)
 	s, err := machine.Status(*Args)
 	if err !=nil {
@@ -19,9 +19,7 @@ func (t *ClusterStatus) GetStatus(r *http.Request, Args *machine.ClusterStatusCo
 	return nil
 }
 
-type ClusterStop struct {}
-
-func (t *ClusterStop) PerformStop(r *http.Request, Args *machine.StopConfig, Response *machine.StopResult) error {
+func (t *CrcDaemon) PerformStop(r *http.Request, Args *machine.StopConfig, Response *machine.StopResult) error {
 	logging.Debugf("Args: %#v", Args)
 	s, err := machine.Stop(*Args)
 	if err != nil {
@@ -43,9 +41,7 @@ type ClusterStartConfig struct {
 	PullSecret string
 }
 
-type ClusterStart struct {}
-
-func (t *ClusterStart) PerformStart(r *http.Request, Args *ClusterStartConfig, Response *machine.StartResult) error {
+func (t *CrcDaemon) PerformStart(r *http.Request, Args *ClusterStartConfig, Response *machine.StartResult) error {
 	logging.Debugf("Args: %#v", Args)
 	startConfig := machine.StartConfig{
 		Name: Args.Name,
