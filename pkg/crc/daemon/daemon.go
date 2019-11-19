@@ -1,6 +1,8 @@
 package daemon
 
 import (
+	"net"
+	"os"
 	"net/http"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/rpc"
@@ -24,5 +26,10 @@ func RunDaemon() {
 		})
 
 	r.Handle("/rpc", chain.Then(s))
-	http.ListenAndServe("localhost:5732", r)
+	os.RemoveAll("/tmp/crc.sock")
+	lnr, err := net.Listen("unix", "/tmp/crc.sock")
+	if err != nil {
+		logging.Error("Failed to create socket")
+	}
+	http.Serve(lnr, r)
 }
