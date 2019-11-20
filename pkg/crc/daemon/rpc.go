@@ -1,65 +1,83 @@
 package daemon
 
 import (
-	"net/http"
+	"fmt"
+	"io/ioutil"
+
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
+	"github.com/code-ready/crc/pkg/crc/constants"
+	"github.com/code-ready/crc/cmd/crc/cmd/config"
+	crcConfig "github.com/code-ready/crc/pkg/crc/config"
+	"github.com/code-ready/crc/pkg/crc/validation"
+	"github.com/code-ready/crc/pkg/crc/version"
 )
 
-type CrcDaemon string
-
-func (t *CrcDaemon) GetStatus(r *http.Request, Args *machine.ClusterStatusConfig, Response *machine.ClusterStatusResult) error {
-	logging.Debugf("Args: %#v", Args)
-	s, err := machine.Status(*Args)
-	if err !=nil {
-		logging.Error(err.Error())
-		return err
-	}
-	*Response = s
-	return nil
-}
-
-func (t *CrcDaemon) PerformStop(r *http.Request, Args *machine.StopConfig, Response *machine.StopResult) error {
-	logging.Debugf("Args: %#v", Args)
-	s, err := machine.Stop(*Args)
+func statusHandler() machine.ClusterStatusResult {
+	statusConfig := machine.ClusterStatusConfig{Name: constants.DefaultName}
+	clusterStatus, err := machine.Status(statusConfig)
 	if err != nil {
 		logging.Error(err.Error())
-		return err
 	}
-	*Response = s
-	return nil
+	return clusterStatus
 }
 
-type ClusterStartConfig struct {
-	Name string
-	BundlePath string
-	VMDriver string
-	Memory   int
-	CPUs     int
-	NameServer string
-	Debug bool
-	PullSecret string
+func stopHandler() machine.StopResult {
+	stopConfig := machine.StopConfig{
+		Name:  constants.DefaultName,
+		Debug: true,
+	}
+	commandResult, err := machine.Stop(stopConfig)
+	if err != nil {
+		logging.Error(err.Error())
+	}
+	return commandResult
 }
 
-func (t *CrcDaemon) PerformStart(r *http.Request, Args *ClusterStartConfig, Response *machine.StartResult) error {
-	logging.Debugf("Args: %#v", Args)
+func startHandler() (machine.StartResult, error) {
 	startConfig := machine.StartConfig{
-		Name: Args.Name,
-		BundlePath: Args.BundlePath,
-		VMDriver: Args.VMDriver,
-		Memory: Args.Memory,
-		CPUs: Args.CPUs,
-		NameServer: Args.NameServer,
-		Debug: Args.Debug,
-		GetPullSecret: func() (string, error) { return Args.PullSecret, nil },
+		Name:          constants.DefaultName,
+		BundlePath:    crcConfig.GetString(config.Bundle.Name),
+		VMDriver:      crcConfig.GetString(config.VMDriver.Name),
+		Memory:        crcConfig.GetInt(config.Memory.Name),
+		CPUs:          crcConfig.GetInt(config.CPUs.Name),
+		NameServer:    crcConfig.GetString(config.NameServer.Name),
+		GetPullSecret: getPullSecretFileContent,
+		Debug:         true,
 	}
-	logging.Debug()
-	logging.Debugf("%#v", startConfig)
 	status, err := machine.Start(startConfig)
 	if err != nil {
 		logging.Error(err.Error())
-		return err
+		return machine.StartResult{}, err
 	}
-	*Response = status
-	return nil
+	return status, nil
+}
+
+type versionResult struct {
+	crcVersion string
+	openshiftVersion string
+}
+
+
+func versionHandler() versionResult {
+	var embedded string
+	if !constants.BundleEmbedded() {
+		embedded = "not "
+	}
+	return versionResult {
+		crcVersion: fmt.Sprintf("crc version: %s+%s\n", version.GetCRCVersion(), version.GetCommitSha()),
+		openshiftVersion: fmt.Sprintf("OpenShift version: %s (%sembedded in binary)\n", version.GetBundleVersion(), embedded),
+	}
+}
+
+func getPullSecretFileContent() (string, error) {
+	data, err := ioutil.ReadFile(crcConfig.GetString(config.PullSecretFile.Name))
+	if err != nil {
+		return "", err
+	}
+	pullsecret := string(data)
+	if err := validation.ImagePullSecret(pullsecret); err != nil {
+		return "", err
+	}
+	return pullsecret, nil
 }
