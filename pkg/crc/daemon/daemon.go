@@ -33,7 +33,7 @@ func RunDaemon() {
 	if err != nil {
 		logging.Error("Failed to create daemon socket", socketPath)
 	}
-	
+
 	for {
 		conn, err := lnr.Accept()
 		if err != nil {
@@ -45,6 +45,7 @@ func RunDaemon() {
 }
 
 func handleConnections(c net.Conn) {
+	for {
 		logging.Info("Loop starts")
 		readBuffer := make([]byte, 20)
 		numBytes, err := c.Read(readBuffer)
@@ -61,6 +62,10 @@ func handleConnections(c net.Conn) {
 			c.Write(writeBuffer.Bytes())
 			writeBuffer.Reset()
 		case Stop:
+			r := stopHandler()
+			fmt.Fprint(&writeBuffer, r)
+			c.Write(writeBuffer.Bytes())
+			writeBuffer.Reset()
 			logging.Info("handle Stop")
 		case Delete:
 			logging.Info("Handle delete")
@@ -72,7 +77,12 @@ func handleConnections(c net.Conn) {
 			writeBuffer.Reset()
 		case Version:
 			logging.Info("handle version")
+			r := versionHandler()
+			fmt.Fprint(&writeBuffer, r)
+			c.Write(writeBuffer.Bytes())
+			writeBuffer.Reset()
 		default:
 			logging.Info("Unknown command received", command)
 		}
+	}
 }

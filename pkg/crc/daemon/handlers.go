@@ -3,6 +3,7 @@ package daemon
 import (
 	"fmt"
 	"io/ioutil"
+	"encoding/json"
 
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/machine"
@@ -13,16 +14,20 @@ import (
 	"github.com/code-ready/crc/pkg/crc/version"
 )
 
-func statusHandler() machine.ClusterStatusResult {
+func statusHandler() string {
 	statusConfig := machine.ClusterStatusConfig{Name: constants.DefaultName}
 	clusterStatus, err := machine.Status(statusConfig)
 	if err != nil {
 		logging.Error(err.Error())
 	}
-	return clusterStatus
+	s, err := json.Marshal(clusterStatus)
+	if err != nil {
+		return "Failed"
+	}
+	return string(s)
 }
 
-func stopHandler() machine.StopResult {
+func stopHandler() string {
 	stopConfig := machine.StopConfig{
 		Name:  constants.DefaultName,
 		Debug: true,
@@ -31,10 +36,14 @@ func stopHandler() machine.StopResult {
 	if err != nil {
 		logging.Error(err.Error())
 	}
-	return commandResult
+	s, err := json.Marshal(commandResult)
+	if err != nil {
+		return "Failed"
+	}
+	return string(s)
 }
 
-func startHandler() (machine.StartResult, error) {
+func startHandler() (string, error) {
 	startConfig := machine.StartConfig{
 		Name:          constants.DefaultName,
 		BundlePath:    crcConfig.GetString(config.Bundle.Name),
@@ -45,29 +54,39 @@ func startHandler() (machine.StartResult, error) {
 		GetPullSecret: getPullSecretFileContent,
 		Debug:         true,
 	}
+	fmt.Println(crcConfig.GetString(config.PullSecretFile.Name))
 	status, err := machine.Start(startConfig)
 	if err != nil {
 		logging.Error(err.Error())
-		return machine.StartResult{}, err
+		return "Failed", err
 	}
-	return status, nil
+	s, err := json.Marshal(status)
+	if err != nil {
+		return "Failed during json marshaling", err
+	}
+	return string(s), nil
 }
 
-type versionResult struct {
-	crcVersion string
-	openshiftVersion string
+type VersionResult struct {
+	CrcVersion string
+	OpenshiftVersion string
 }
 
 
-func versionHandler() versionResult {
+func versionHandler() string {
 	var embedded string
 	if !constants.BundleEmbedded() {
 		embedded = "not "
 	}
-	return versionResult {
-		crcVersion: fmt.Sprintf("crc version: %s+%s\n", version.GetCRCVersion(), version.GetCommitSha()),
-		openshiftVersion: fmt.Sprintf("OpenShift version: %s (%sembedded in binary)\n", version.GetBundleVersion(), embedded),
+	v := &VersionResult {
+		CrcVersion: fmt.Sprintf("%s+%s", version.GetCRCVersion(), version.GetCommitSha()),
+		OpenshiftVersion: fmt.Sprintf("%s (%sembedded in binary)", version.GetBundleVersion(), embedded),
 	}
+	s, err := json.Marshal(v)
+	if err != nil {
+		return "Failed"
+	}
+	return string(s)
 }
 
 func getPullSecretFileContent() (string, error) {
