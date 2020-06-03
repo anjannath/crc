@@ -14,38 +14,38 @@ import (
 	"github.com/pkg/errors"
 )
 
-type Cache struct {
+type BinaryCache struct {
 	binaryName string
 	archiveURL string
 	destDir    string
 }
 
-func New(binarName string, archiveURL string, destDir string) *Cache {
-	return &Cache{binaryName: binarName, archiveURL: archiveURL, destDir: destDir}
+func New(binaryName string, archiveURL string, destDir string) *BinaryCache {
+	return &BinaryCache{binaryName: binaryName, archiveURL: archiveURL, destDir: destDir}
 }
 
-func NewOcCache(destDir string) *Cache {
+func NewOcCache(destDir string) *BinaryCache {
 	return New(constants.OcBinaryName, constants.GetOcUrl(), destDir)
 }
 
-func NewPodmanCache(destDir string) *Cache {
+func NewPodmanCache(destDir string) *BinaryCache {
 	return New(constants.PodmanBinaryName, constants.GetPodmanUrl(), destDir)
 }
 
-func NewGoodhostsCache(destDir string) *Cache {
+func NewGoodhostsCache(destDir string) *BinaryCache {
 	return New(constants.GoodhostsBinaryName, constants.GetGoodhostsUrl(), destDir)
 }
 
-func (c *Cache) IsCached() bool {
+func (c *BinaryCache) IsCached() bool {
 	if _, err := os.Stat(filepath.Join(c.destDir, c.binaryName)); os.IsNotExist(err) {
 		return false
 	}
 	return true
 }
 
-func (c *Cache) EnsureIsCached() error {
+func (c *BinaryCache) EnsureIsCached() error {
 	if !c.IsCached() {
-		err := c.CacheBinary()
+		err := c.DoCache()
 		if err != nil {
 			return err
 		}
@@ -54,7 +54,7 @@ func (c *Cache) EnsureIsCached() error {
 }
 
 // CacheBinary downloads and caches the requested binary into the CRC directory
-func (c *Cache) CacheBinary() error {
+func (c *BinaryCache) DoCache() error {
 	if c.IsCached() {
 		return nil
 	}
@@ -65,7 +65,7 @@ func (c *Cache) CacheBinary() error {
 		return err
 	}
 	defer os.RemoveAll(tmpDir)
-	assetTmpFile, err := c.getBinary(tmpDir)
+	assetTmpFile, err := c.extract(tmpDir)
 	if err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func (c *Cache) CacheBinary() error {
 	return nil
 }
 
-func (c *Cache) getBinary(destDir string) (string, error) {
+func (c *BinaryCache) extract(destDir string) (string, error) {
 	logging.Debug("Trying to extract oc from crc binary")
 	archiveName := filepath.Base(c.archiveURL)
 	destPath := filepath.Join(destDir, archiveName)
