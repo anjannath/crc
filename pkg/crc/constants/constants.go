@@ -27,7 +27,7 @@ const (
 	DaemonLogFile        = "crcd.log"
 	CrcLandingPageURL    = "https://cloud.redhat.com/openshift/install/crc/installer-provisioned" // #nosec G101
 
-	DefaultOcURLBase          = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp"
+	DefaultOcUrlBase          = "https://github.com/openshift/okd/releases/download"
 	DefaultPodmanURLBase      = "https://storage.googleapis.com/libpod-master-releases"
 	DefaultGoodhostsCliBase   = "https://github.com/code-ready/goodhosts-cli/releases/download/v1.0.0"
 	CRCMacTrayDownloadURL     = "https://github.com/code-ready/tray-macos/releases/download/v%s/crc-tray-macos.tar.gz"
@@ -36,9 +36,9 @@ const (
 )
 
 var ocURLForOs = map[string]string{
-	"darwin":  fmt.Sprintf("%s/%s/%s", DefaultOcURLBase, version.GetOcVersion(), "openshift-client-mac.tar.gz"),
-	"linux":   fmt.Sprintf("%s/%s/%s", DefaultOcURLBase, version.GetOcVersion(), "openshift-client-linux.tar.gz"),
-	"windows": fmt.Sprintf("%s/%s/%s", DefaultOcURLBase, version.GetOcVersion(), "openshift-client-windows.zip"),
+	"darwin":  fmt.Sprintf("%s/%s/%s", DefaultOcUrlBase, version.GetOcVersion(), fmt.Sprintf("openshift-client-mac-%s.tar.gz", version.GetOcVersion())),
+	"linux":   fmt.Sprintf("%s/%s/%s", DefaultOcUrlBase, version.GetOcVersion(), fmt.Sprintf("openshift-client-linux-%s.tar.gz", version.GetOcVersion())),
+	"windows": fmt.Sprintf("%s/%s/%s", DefaultOcUrlBase, version.GetOcVersion(), fmt.Sprintf("openshift-client-windows-%s.zip", version.GetOcVersion())),
 }
 
 func GetOcURLForOs(os string) string {
