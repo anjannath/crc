@@ -83,6 +83,7 @@ func initStartCmdFlagSet() *pflag.FlagSet {
 	flagSet.IntP(config.Memory.Name, "m", constants.DefaultMemory, "MiB of memory to allocate to the OpenShift cluster")
 	flagSet.StringP(config.NameServer.Name, "n", "", "IPv4 address of nameserver to use for the OpenShift cluster")
 	flagSet.Bool(config.DisableUpdateCheck.Name, false, "Don't check for update")
+	flagSet.Bool(config.Okd.Name, false, "Start an OKD cluster")
 
 	return flagSet
 }
@@ -98,8 +99,10 @@ func validateStartFlags() error {
 	if err := validation.ValidateCPUs(crcConfig.GetInt(config.CPUs.Name)); err != nil {
 		return err
 	}
-	if err := validation.ValidateBundle(crcConfig.GetString(config.Bundle.Name)); err != nil {
-		return err
+	if !crcConfig.GetBool(config.Okd.Name) {
+		if err := validation.ValidateBundle(crcConfig.GetString(config.Bundle.Name)); err != nil {
+			return err
+		}
 	}
 	if crcConfig.GetString(config.NameServer.Name) != "" {
 		if err := validation.ValidateIPAddress(crcConfig.GetString(config.NameServer.Name)); err != nil {
@@ -110,6 +113,10 @@ func validateStartFlags() error {
 }
 
 func getPullSecretFileContent() (string, error) {
+	if crcConfig.GetBool(config.Okd.Name) && len(crcConfig.GetString(config.PullSecretFile.Name)) == 0{
+		return `{"auths":{"fake":{"auth": "bar"}}}`, nil
+	}
+
 	var (
 		pullsecret string
 		err        error

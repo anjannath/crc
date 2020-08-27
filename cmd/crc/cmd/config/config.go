@@ -20,6 +20,7 @@ var (
 
 	DisableUpdateCheck   = cfg.AddSetting("disable-update-check", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 	ExperimentalFeatures = cfg.AddSetting("enable-experimental-features", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
+	Okd                  = cfg.AddSetting("start-okd-cluster", nil, []cfg.ValidationFnType{cfg.ValidateBool}, []cfg.SetFn{cfg.SuccessfullyApplied})
 
 	// Proxy Configuration
 
