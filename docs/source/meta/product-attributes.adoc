@@ -8,6 +8,7 @@
 :sectanchors:
 :sectlinks:
 :experimental:
+:favicon: ./crc-logo.png
 
 // Platforms
 :rh: Red{nbsp}Hat
