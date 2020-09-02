@@ -12,3 +12,7 @@ func NewMachineDriverHyperkitCache(version string, getVersion func() (string, er
 func NewHyperkitCache(version string, getVersion func() (string, error)) *Cache {
 	return New(hyperkit.HyperkitCommand, hyperkit.HyperkitDownloadURL, constants.CrcBinDir, version, getVersion)
 }
+
+func NewSystemtrayCache(version string, getVersion func() (string, error)) *Cache {
+	return New(constants.TrayBinaryName, constants.GetSystemTrayURL(), constants.TrayAppBundlePath, version, getVersion)
+}

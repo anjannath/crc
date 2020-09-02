@@ -91,6 +91,19 @@ func GetDefaultBundle() string {
 	return GetDefaultBundleForOs(runtime.GOOS)
 }
 
+var systemTrayURLForOs = map[string]string{
+	"darwin":  fmt.Sprintf(CRCMacTrayDownloadURL, version.GetCRCMacTrayVersion()),
+	"windows": fmt.Sprintf(CRCWindowsTrayDownloadURL, version.GetCRCWindowsTrayVersion()),
+}
+
+func GetSystemTrayURLForOs(os string) string {
+	return systemTrayURLForOs[os]
+}
+
+func GetSystemTrayURL() string {
+	return GetSystemTrayURLForOs(runtime.GOOS)
+}
+
 var (
 	CrcBaseDir         = filepath.Join(GetHomeDir(), ".crc")
 	CrcBinDir          = filepath.Join(CrcBaseDir, "bin")
@@ -161,13 +174,4 @@ func GetPublicKeyPath() string {
 
 func GetPrivateKeyPath() string {
 	return filepath.Join(MachineInstanceDir, DefaultName, "id_rsa")
-}
-
-// TODO: follow the same pattern as oc and podman above
-func GetCRCMacTrayDownloadURL() string {
-	return fmt.Sprintf(CRCMacTrayDownloadURL, version.GetCRCMacTrayVersion())
-}
-
-func GetCRCWindowsTrayDownloadURL() string {
-	return fmt.Sprintf(CRCWindowsTrayDownloadURL, version.GetCRCWindowsTrayVersion())
 }

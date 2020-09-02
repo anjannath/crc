@@ -7,16 +7,12 @@ import (
 	goos "os"
 	"path/filepath"
 
-	"github.com/Masterminds/semver"
+	"github.com/code-ready/crc/pkg/crc/cache"
 	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
 	"github.com/code-ready/crc/pkg/crc/version"
-	dl "github.com/code-ready/crc/pkg/download"
-	"github.com/code-ready/crc/pkg/embed"
-	"github.com/code-ready/crc/pkg/extract"
 	"github.com/code-ready/crc/pkg/os"
 	"github.com/code-ready/crc/pkg/os/launchd"
-	"github.com/pkg/errors"
 	"howett.net/plist"
 )
 
@@ -124,39 +120,6 @@ func unLoadTrayAgent() error {
 	return launchd.UnloadPlist(trayAgentLabel)
 }
 
-func checkTrayVersion() error {
-	v, err := getTrayVersion(constants.TrayAppBundlePath)
-	if err != nil {
-		logging.Error(err.Error())
-		return err
-	}
-	currentVersion, err := semver.NewVersion(v)
-	if err != nil {
-		logging.Error(err.Error())
-		return err
-	}
-	expectedVersion, err := semver.NewVersion(version.GetCRCMacTrayVersion())
-	if err != nil {
-		logging.Error(err.Error())
-		return err
-	}
-
-	if expectedVersion.GreaterThan(currentVersion) {
-		return fmt.Errorf("Cached version is older then latest version: %s < %s", currentVersion.String(), expectedVersion.String())
-	}
-	return nil
-}
-
-func fixTrayVersion() error {
-	logging.Debug("Downloading/extracting tray binary")
-	// get the tray app
-	err := downloadOrExtractTrayApp()
-	if err != nil {
-		return err
-	}
-	return launchd.RestartAgent(trayAgentLabel)
-}
-
 func checkTrayBinaryPresent() error {
 	if !os.FileExists(constants.TrayBinaryPath) {
 		return fmt.Errorf("Tray binary does not exist")
@@ -166,7 +129,12 @@ func checkTrayBinaryPresent() error {
 
 func fixTrayBinaryPresent() error {
 	logging.Debug("Downloading/extracting tray binary")
-	return downloadOrExtractTrayApp()
+	systemtray := cache.NewSystemtrayCache(version.GetCRCMacTrayVersion(), getTrayVersion)
+	if err := systemtray.EnsureIsCached(); err != nil {
+		return fmt.Errorf("Unable to download system tray %v", err)
+	}
+	logging.Debug("System tray binary cached")
+	return nil
 }
 
 func fixPlistFileExists(agentConfig launchd.AgentConfig) error {
@@ -183,43 +151,9 @@ func fixPlistFileExists(agentConfig launchd.AgentConfig) error {
 	return nil
 }
 
-func downloadOrExtractTrayApp() error {
-	// Extract the tray and put it in the bin directory.
-	tmpArchivePath, err := ioutil.TempDir("", "crc")
-	if err != nil {
-		logging.Error("Failed creating temporary directory for extracting tray")
-		return err
-	}
-	defer func() {
-		_ = goos.RemoveAll(tmpArchivePath)
-	}()
-
-	logging.Debug("Trying to extract tray from crc binary")
-	err = embed.Extract(filepath.Base(constants.GetCRCMacTrayDownloadURL()), tmpArchivePath)
-	if err != nil {
-		logging.Debug("Could not extract tray from crc binary", err)
-		logging.Debug("Downloading crc tray")
-		_, err = dl.Download(constants.GetCRCMacTrayDownloadURL(), tmpArchivePath, 0600)
-		if err != nil {
-			return err
-		}
-	}
-	archivePath := filepath.Join(tmpArchivePath, filepath.Base(constants.GetCRCMacTrayDownloadURL()))
-	outputPath := constants.CrcBinDir
-	err = goos.MkdirAll(outputPath, 0750)
-	if err != nil && !goos.IsExist(err) {
-		return errors.Wrap(err, "Cannot create the target directory.")
-	}
-	_, err = extract.Uncompress(archivePath, outputPath, false)
-	if err != nil {
-		return errors.Wrapf(err, "Cannot uncompress '%s'", archivePath)
-	}
-	return nil
-}
-
-func getTrayVersion(trayAppPath string) (string, error) {
+func getTrayVersion() (string, error) {
 	var version TrayVersion
-	f, err := ioutil.ReadFile(filepath.Join(trayAppPath, "Contents", "Info.plist")) // #nosec G304
+	f, err := ioutil.ReadFile(filepath.Join(constants.TrayAppBundlePath, "Contents", "Info.plist")) // #nosec G304
 	if err != nil {
 		return "", err
 	}

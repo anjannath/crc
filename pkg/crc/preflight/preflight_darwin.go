@@ -68,13 +68,6 @@ var traySetupChecks = [...]Check{
 		cleanup:            removeTrayPlistFile,
 	},
 	{
-		checkDescription: "Checking installed tray version",
-		check:            checkTrayVersion,
-		fixDescription:   "Installing and setting up tray app",
-		fix:              fixTrayVersion,
-		flags:            SetupOnly,
-	},
-	{
 		checkDescription:   "Checking if CodeReady Containers daemon is running",
 		check:              checkIfDaemonAgentRunning,
 		fixDescription:     "Starting CodeReady Containers daemon",
