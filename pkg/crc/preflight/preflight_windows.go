@@ -292,13 +292,28 @@ func cleanVsock() error {
 
 const (
 	Tray LabelName = iota + lastLabelName
+	Id
 )
 
 const (
 	// tray
 	Enabled LabelValue = iota + lastLabelValue
 	Disabled
+
+	// Id Selectors
+	HypervGroup
+	BundleExtract
 )
+
+func (value LabelValue) String() string {
+	switch value {
+	case HypervGroup:
+		return "add-user-to-hyperv-admin-group"
+	case BundleExtract:
+		return "extract-bundle"
+	}
+	return ""
+}
 
 func (filter preflightFilter) SetTray(enable bool) {
 	if version.IsMsiBuild() && enable {
