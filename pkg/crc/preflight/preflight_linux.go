@@ -292,7 +292,7 @@ func getAllPreflightChecks() []Check {
 	return filter.Apply(getChecks(distro()))
 }
 
-func getPreflightChecks(_ bool, _ bool, networkMode network.Mode) []Check {
+func getPreflightChecks(_ bool, _ bool, networkMode network.Mode, _ []string) []Check {
 	usingSystemdResolved := checkSystemdResolvedIsRunning()
 
 	return getPreflightChecksForDistro(distro(), networkMode, usingSystemdResolved == nil)

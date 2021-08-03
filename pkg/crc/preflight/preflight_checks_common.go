@@ -28,7 +28,7 @@ var bundleCheck = Check{
 	fix:              fixBundleExtracted,
 	flags:            SetupOnly,
 
-	labels: None,
+	labels: labels{Id: BundleExtract},
 }
 
 var genericPreflightChecks = []Check{

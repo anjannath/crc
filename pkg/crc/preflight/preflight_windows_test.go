@@ -15,9 +15,10 @@ func TestCountConfigurationOptions(t *testing.T) {
 }
 
 func TestCountPreflights(t *testing.T) {
-	assert.Len(t, getPreflightChecks(false, false, network.SystemNetworkingMode), 20)
-	assert.Len(t, getPreflightChecks(true, true, network.SystemNetworkingMode), 20)
+	assert.Len(t, getPreflightChecks(false, false, network.SystemNetworkingMode, []string{}), 20)
+	assert.Len(t, getPreflightChecks(true, true, network.SystemNetworkingMode, []string{}), 20)
+	assert.Len(t, getPreflightChecks(true, true, network.SystemNetworkingMode, []string{"add-user-to-hyperv-admin-group"}), 1)
 
-	assert.Len(t, getPreflightChecks(false, false, network.UserNetworkingMode), 21)
-	assert.Len(t, getPreflightChecks(true, true, network.UserNetworkingMode), 21)
+	assert.Len(t, getPreflightChecks(false, false, network.UserNetworkingMode, []string{}), 21)
+	assert.Len(t, getPreflightChecks(true, true, network.UserNetworkingMode, []string{}), 21)
 }

@@ -58,7 +58,7 @@ func runSetup(arguments []string) error {
 		}
 	}
 
-	err := preflight.SetupHost(config, checkOnly)
+	err := preflight.SetupHost(config, checkOnly, checks)
 	if err != nil && checkOnly {
 		err = exec.CodeExitError{
 			Err:  err,

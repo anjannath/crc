@@ -104,7 +104,7 @@ var hypervPreflightChecks = []Check{
 			}
 			return m
 		},
-		labels: labels{Os: Windows},
+		labels: labels{Os: Windows, Id: HypervGroup},
 	},
 	{
 		configKeySuffix:  "check-hyperv-service-running",
@@ -323,6 +323,19 @@ func (filter preflightFilter) SetTray(enable bool) {
 	}
 }
 
+func (filter preflightFilter) SelectiveApply(preflightChecks []Check, checkList []string) []Check {
+	checks := []Check{}
+	for _, checkId := range checkList {
+		for _, check := range preflightChecks {
+			if check.labels[Id].String() == checkId {
+				checks = append(checks, check)
+			}
+		}
+	}
+
+	return checks
+}
+
 // We want all preflight checks including
 // - experimental checks
 // - tray checks when using an installer, regardless of tray enabled or not
@@ -331,7 +344,7 @@ func (filter preflightFilter) SetTray(enable bool) {
 // Passing 'UserNetworkingMode' to getPreflightChecks currently achieves this
 // as there are no system networking specific checks
 func getAllPreflightChecks() []Check {
-	return getPreflightChecks(true, true, network.UserNetworkingMode)
+	return getPreflightChecks(true, true, network.UserNetworkingMode, []string{})
 }
 
 func getChecks() []Check {
@@ -345,8 +358,11 @@ func getChecks() []Check {
 	return checks
 }
 
-func getPreflightChecks(_ bool, trayAutoStart bool, networkMode network.Mode) []Check {
+func getPreflightChecks(_ bool, trayAutoStart bool, networkMode network.Mode, checks []string) []Check {
 	filter := newFilter()
+	if len(checks) > 0 {
+		return filter.SelectiveApply(getChecks(), checks)
+	}
 	filter.SetNetworkMode(networkMode)
 	filter.SetTray(trayAutoStart)
 

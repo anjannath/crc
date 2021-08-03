@@ -155,18 +155,18 @@ func StartPreflightChecks(config crcConfig.Storage) error {
 	experimentalFeatures := config.Get(crcConfig.ExperimentalFeatures).AsBool()
 	mode := crcConfig.GetNetworkMode(config)
 	trayAutostart := config.Get(crcConfig.AutostartTray).AsBool()
-	if err := doPreflightChecks(config, getPreflightChecks(experimentalFeatures, trayAutostart, mode)); err != nil {
+	if err := doPreflightChecks(config, getPreflightChecks(experimentalFeatures, trayAutostart, mode, []string{})); err != nil {
 		return &errors.PreflightError{Err: err}
 	}
 	return nil
 }
 
 // SetupHost performs the prerequisite checks and setups the host to run the cluster
-func SetupHost(config crcConfig.Storage, checkOnly bool) error {
+func SetupHost(config crcConfig.Storage, checkOnly bool, checks []string) error {
 	experimentalFeatures := config.Get(crcConfig.ExperimentalFeatures).AsBool()
 	mode := crcConfig.GetNetworkMode(config)
 	trayAutostart := config.Get(crcConfig.AutostartTray).AsBool()
-	return doFixPreflightChecks(config, getPreflightChecks(experimentalFeatures, trayAutostart, mode), checkOnly)
+	return doFixPreflightChecks(config, getPreflightChecks(experimentalFeatures, trayAutostart, mode, checks), checkOnly)
 }
 
 func RegisterSettings(config crcConfig.Schema) {
