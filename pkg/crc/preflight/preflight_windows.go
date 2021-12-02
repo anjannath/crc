@@ -16,7 +16,8 @@ var hypervPreflightChecks = []Check{
 		configKeySuffix:  "check-administrator-user",
 		checkDescription: "Checking if running in a shell with administrator rights",
 		check:            checkIfRunningAsNormalUser,
-		flags:            StartUpOnly,
+		fixDescription:   "crc should be ran in a shell without administrator rights",
+		flags:            NoFix | StartUpOnly,
 
 		labels: labels{Os: Windows},
 	},
@@ -24,7 +25,8 @@ var hypervPreflightChecks = []Check{
 		configKeySuffix:  "check-windows-version",
 		checkDescription: "Checking Windows 10 release",
 		check:            checkVersionOfWindowsUpdate,
-		flags:            StartUpOnly,
+		fixDescription:   "Please manually update your Windows 10 installation",
+		flags:            NoFix | StartUpOnly,
 
 		labels: labels{Os: Windows},
 	},
@@ -32,7 +34,8 @@ var hypervPreflightChecks = []Check{
 		configKeySuffix:  "check-windows-edition",
 		checkDescription: "Checking Windows edition",
 		check:            checkWindowsEdition,
-		flags:            StartUpOnly,
+		fixDescription:   "Your Windows edition is not supported. Consider using Professional or Enterprise editions of Windows",
+		flags:            NoFix | StartUpOnly,
 
 		labels: labels{Os: Windows},
 	},
@@ -40,6 +43,8 @@ var hypervPreflightChecks = []Check{
 		configKeySuffix:  "check-hyperv-installed",
 		checkDescription: "Checking if Hyper-V is installed and operational",
 		check:            checkHyperVInstalled,
+		fixDescription:   "Installing Hyper-V",
+		fix:              fixHyperVInstalled,
 		flags:            StartUpOnly,
 
 		labels: labels{Os: Windows},
@@ -53,8 +58,21 @@ var hypervPreflightChecks = []Check{
 			}
 			return nil
 		},
-		flags: StartUpOnly,
-
+		fixDescription: "Creating crc-users group",
+		fix: func() error {
+			if _, _, err := powershell.ExecuteAsAdmin("create crc-users group", "New-LocalGroup -Name crc-users"); err != nil {
+				return fmt.Errorf("failed to create 'crc-users' group: %v", err)
+			}
+			return nil
+		},
+		cleanupDescription: "Removing 'crc-users' group",
+		cleanup: func() error {
+			if _, _, err := powershell.ExecuteAsAdmin("remove crc-users group", "Remove-LocalGroup -Name crc-users"); err != nil {
+				return fmt.Errorf("failed to remove 'crc-users' group: %v", err)
+			}
+			return nil
+		},
+		flags:  NoFix | StartUpOnly,
 		labels: labels{Os: Windows},
 	},
 	{
@@ -70,6 +88,8 @@ var hypervPreflightChecks = []Check{
 		configKeySuffix:  "check-hyperv-service-running",
 		checkDescription: "Checking if Hyper-V service is enabled",
 		check:            checkHyperVServiceRunning,
+		fixDescription:   "Enabling Hyper-V service",
+		fix:              fixHyperVServiceRunning,
 		flags:            StartUpOnly,
 
 		labels: labels{Os: Windows},
@@ -78,7 +98,8 @@ var hypervPreflightChecks = []Check{
 		configKeySuffix:  "check-hyperv-switch",
 		checkDescription: "Checking if the Hyper-V virtual switch exists",
 		check:            checkIfHyperVVirtualSwitchExists,
-		flags:            StartUpOnly,
+		fixDescription:   "Unable to perform Hyper-V administrative commands. Please reboot your system and run 'crc setup' to complete the setup process",
+		flags:            NoFix | StartUpOnly,
 
 		labels: labels{Os: Windows},
 	},
@@ -100,10 +121,14 @@ var hypervPreflightChecks = []Check{
 
 var vsockChecks = []Check{
 	{
-		configKeySuffix:  "check-vsock",
-		checkDescription: "Checking if vsock is correctly configured",
-		check:            checkVsock,
-		flags:            StartUpOnly,
+		configKeySuffix:    "check-vsock",
+		checkDescription:   "Checking if vsock is correctly configured",
+		check:              checkVsock,
+		fixDescription:     "Checking if vsock is correctly configured",
+		fix:                fixVsock,
+		cleanupDescription: "Removing vsock service from hyperv registry",
+		cleanup:            cleanVsock,
+		flags:              NoFix | StartUpOnly,
 
 		labels: labels{Os: Windows, NetworkMode: User},
 	},
@@ -133,6 +158,26 @@ func checkVsock() error {
 	}
 	if !strings.Contains(stdout, registryValue) {
 		return errors.New("VSock registry key not correctly configured")
+	}
+	return nil
+}
+
+func fixVsock() error {
+	cmds := []string{
+		fmt.Sprintf(`$service = New-Item -Path "%s" -Name "%s"`, registryDirectory, registryKey),
+		fmt.Sprintf(`$service.SetValue("ElementName", "%v")`, registryValue),
+	}
+	_, _, err := powershell.ExecuteAsAdmin("adding vsock registry key", strings.Join(cmds, ";"))
+	return err
+}
+
+func cleanVsock() error {
+	if err := checkVsock(); err != nil {
+		return nil
+	}
+	_, _, err := powershell.ExecuteAsAdmin("Removing vsock registry key", fmt.Sprintf(`Remove-Item -Path "%s\%s"`, registryDirectory, registryKey))
+	if err != nil {
+		return fmt.Errorf("Unable to remove vsock service from hyperv registry: %v", err)
 	}
 	return nil
 }
