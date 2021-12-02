@@ -3,20 +3,13 @@
 package preflight
 
 import (
+	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
-	"runtime"
 	"syscall"
 
-	"github.com/code-ready/crc/pkg/crc/cache"
-	"github.com/code-ready/crc/pkg/crc/constants"
 	"github.com/code-ready/crc/pkg/crc/logging"
-	"github.com/code-ready/crc/pkg/crc/validation"
-	"github.com/code-ready/crc/pkg/crc/version"
 	crcos "github.com/code-ready/crc/pkg/os"
-	"github.com/docker/go-units"
-	"github.com/pkg/errors"
 )
 
 var nonWinPreflightChecks = []Check{
@@ -28,45 +21,6 @@ var nonWinPreflightChecks = []Check{
 		flags:            NoFix,
 
 		// no need for an "os" label as this is only built on relevant OSes through the use of golang build tags
-		labels: None,
-	},
-}
-
-var genericPreflightChecks = []Check{
-	{
-		configKeySuffix:  "check-admin-helper-cached",
-		checkDescription: "Checking if crc-admin-helper executable is cached",
-		check:            checkAdminHelperExecutableCached,
-		fixDescription:   "Caching crc-admin-helper executable",
-		fix:              fixAdminHelperExecutableCached,
-
-		labels: None,
-	},
-	{
-		configKeySuffix:  "check-obsolete-admin-helper",
-		checkDescription: "Checking for obsolete admin-helper executable",
-		check:            checkOldAdminHelperExecutableCached,
-		fixDescription:   "Removing obsolete admin-helper executable",
-		fix:              fixOldAdminHelperExecutableCached,
-	},
-	{
-		configKeySuffix:  "check-supported-cpu-arch",
-		checkDescription: "Checking if running on a supported CPU architecture",
-		check:            checkSupportedCPUArch,
-		fixDescription:   "CodeReady Containers is only supported on x86_64 hardware",
-		flags:            NoFix,
-
-		labels: None,
-	},
-	{
-		configKeySuffix:  "check-ram",
-		checkDescription: "Checking minimum RAM requirements",
-		check: func() error {
-			return validation.ValidateEnoughMemory(constants.DefaultMemory)
-		},
-		fixDescription: fmt.Sprintf("crc requires at least %s to run", units.HumanSize(float64(constants.DefaultMemory*1024*1024))),
-		flags:          NoFix,
-
 		labels: None,
 	},
 }

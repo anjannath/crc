@@ -13,8 +13,7 @@ const (
 	NetworkMode
 
 	// Keep it last
-	// will be used in OS-specific go files to extend LabelName
-	lastLabelName // nolint
+	lastLabelName // will be used in OS-specific go files to extend LabelName
 )
 
 type LabelValue uint32
@@ -30,8 +29,7 @@ const (
 	System
 
 	// Keep it last
-	// will be used in OS-specific go files to extend LabelValue
-	lastLabelValue // nolint
+	lastLabelValue // will be used in OS-specific go files to extend LabelValue
 )
 
 var (
