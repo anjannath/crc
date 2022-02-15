@@ -27,6 +27,8 @@ DOCS_BUILD_TARGET ?= /docs/source/getting_started/master.adoc
 
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
+TRAY_ARCH = $(subst amd64,x64,$(GOARCH))
+
 HOST_BUILD_DIR=$(BUILD_DIR)/$(GOOS)-$(GOARCH)
 GOPATH ?= $(shell go env GOPATH)
 ORG := github.com/code-ready
@@ -319,12 +321,12 @@ packagedir: clean embed-download macos-release-binary packaging/vfkit-$(GOARCH).
 	mkdir -p packaging/root/Applications
 	tar -C packaging/root/Applications -xvzf $(TRAY_RELEASE)
 	rm packaging/tmp/crc-tray-macos.tar.gz
-	mv packaging/root/Applications/crc-tray-darwin-x64/crc-tray.app packaging/root/Applications/Red\ Hat\ OpenShift\ Local.app
-	rm -fr packaging/root/Applications/crc-tray-darwin-x64
+	mv packaging/root/Applications/crc-tray-darwin-$(TRAY_ARCH)/crc-tray.app packaging/root/Applications/Red\ Hat\ OpenShift\ Local.app
+	rm -fr packaging/root/Applications/crc-tray-darwin-$(TRAY_ARCH)
 
 	mv packaging/tmp/* packaging/root/"$(MACOS_INSTALL_PATH)"
 
-	cp $(BUILD_DIR)/macos-amd64/crc packaging/root/"$(MACOS_INSTALL_PATH)"
+	cp $(BUILD_DIR)/macos-$(GOARCH)/crc packaging/root/"$(MACOS_INSTALL_PATH)"
 	cp LICENSE packaging/darwin/Resources/LICENSE.txt
 	pkgbuild --analyze --root packaging/root packaging/components.plist
 	plutil -replace BundleIsRelocatable -bool NO packaging/components.plist
