@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"runtime"
 	"strings"
 
 	"github.com/code-ready/crc/pkg/crc/constants"
@@ -121,9 +122,14 @@ func ValidateYesNo(value interface{}) (bool, string) {
 }
 
 func validatePreset(value interface{}) (bool, string) {
-	_, err := crcpreset.ParsePresetE(cast.ToString(value))
+	preset, err := crcpreset.ParsePresetE(cast.ToString(value))
 	if err != nil {
 		return false, fmt.Sprintf("Unknown preset. Only %s and %s are valid.", crcpreset.Podman, crcpreset.OpenShift)
+	}
+	if runtime.GOOS == "darwin" && runtime.GOARCH == "arm64" {
+		if preset != crcpreset.Podman {
+			return false, "Only 'podman' preset is supported on M1 machines"
+		}
 	}
 	return true, ""
 }
