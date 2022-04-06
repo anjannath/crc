@@ -155,7 +155,8 @@ func (c *Config) Get(key string) SettingValue {
 		}
 	}
 	return SettingValue{
-		Value:     value,
-		IsDefault: reflect.DeepEqual(setting.defaultValue, value),
+		Value:        value,
+		IsDefault:    reflect.DeepEqual(setting.defaultValue, value),
+		DefaultValue: setting.defaultValue,
 	}
 }

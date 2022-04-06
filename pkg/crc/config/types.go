@@ -22,9 +22,10 @@ type Setting struct {
 }
 
 type SettingValue struct {
-	Value     interface{}
-	Invalid   bool
-	IsDefault bool
+	Value        interface{}
+	DefaultValue interface{}
+	Invalid      bool
+	IsDefault    bool
 }
 
 func (v SettingValue) AsBool() bool {
