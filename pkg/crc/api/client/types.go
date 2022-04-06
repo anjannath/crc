@@ -1,6 +1,7 @@
 package client
 
 import (
+	"github.com/code-ready/crc/pkg/crc/config"
 	"github.com/code-ready/crc/pkg/crc/machine/types"
 	"github.com/code-ready/crc/pkg/crc/preset"
 )
@@ -40,7 +41,7 @@ type SetOrUnsetConfigResult struct {
 
 // getConfigResult struct is used to return the result of getconfig command
 type GetConfigResult struct {
-	Configs map[string]interface{}
+	Configs map[string]config.SettingValue
 }
 
 type StartConfig struct {

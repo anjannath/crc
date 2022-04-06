@@ -213,22 +213,22 @@ func (h *Handler) GetConfig(c *context) error {
 
 	if len(req.Properties) == 0 {
 		allConfigs := h.Config.AllConfigs()
-		configs := make(map[string]interface{})
+		configs := make(map[string]crcConfig.SettingValue)
 		for k, v := range allConfigs {
-			configs[k] = v.Value
+			configs[k] = v
 		}
 		return c.JSON(http.StatusOK, client.GetConfigResult{
 			Configs: configs,
 		})
 	}
 
-	configs := make(map[string]interface{})
+	configs := make(map[string]crcConfig.SettingValue)
 	for _, key := range req.Properties {
 		v := h.Config.Get(key)
 		if v.Invalid {
 			continue
 		}
-		configs[key] = v.Value
+		configs[key] = v
 	}
 
 	if len(configs) == 0 {
