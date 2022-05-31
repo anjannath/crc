@@ -299,12 +299,12 @@ update-go-version:
 goversioncheck:
 	./verify-go-version.sh
 
-TRAY_RELEASE ?= packaging/tmp/crc-tray-macos.tar.gz
+TRAY_RELEASE ?= packaging/tmp/crc-tray-macos-$(GOARCH).tar.gz
 
 embed-download: $(HOST_BUILD_DIR)/crc-embedder
 ifeq ($(CUSTOM_EMBED),false)
 	mkdir -p $(EMBED_DOWNLOAD_DIR)
-	$(HOST_BUILD_DIR)/crc-embedder download $(EMBED_DOWNLOAD_DIR)
+	$(HOST_BUILD_DIR)/crc-embedder download --log-level debug $(EMBED_DOWNLOAD_DIR)
 endif
 
 packaging/vfkit-$(GOARCH).entitlements:
@@ -320,7 +320,7 @@ packagedir: clean embed-download macos-release-binary packaging/vfkit-$(GOARCH).
 	cp $(EMBED_DOWNLOAD_DIR)/* packaging/tmp/
 	mkdir -p packaging/root/Applications
 	tar -C packaging/root/Applications -xvzf $(TRAY_RELEASE)
-	rm packaging/tmp/crc-tray-macos.tar.gz
+	rm $(TRAY_RELEASE)
 	mv packaging/root/Applications/crc-tray-darwin-$(TRAY_ARCH)/crc-tray.app packaging/root/Applications/Red\ Hat\ OpenShift\ Local.app
 	rm -fr packaging/root/Applications/crc-tray-darwin-$(TRAY_ARCH)
 
@@ -331,10 +331,10 @@ packagedir: clean embed-download macos-release-binary packaging/vfkit-$(GOARCH).
 	pkgbuild --analyze --root packaging/root packaging/components.plist
 	plutil -replace BundleIsRelocatable -bool NO packaging/components.plist
 
-$(BUILD_DIR)/macos-amd64/crc-macos-amd64.pkg: packagedir
-	./packaging/package.sh $(BUILD_DIR)/macos-amd64
+$(BUILD_DIR)/macos-$(GOARCH)/crc-macos-$(GOARCH).pkg: packagedir
+	./packaging/package.sh $(@D)
 
-$(BUILD_DIR)/macos-amd64/crc-macos-installer-amd64.tar: packagedir
+$(BUILD_DIR)/macos-$(GOARCH)/crc-macos-installer-$(GOARCH).tar: packagedir
 	tar -cvf $@ ./packaging
 	cd $(@D) && sha256sum $(@F)>$(@F).sha256sum
 
