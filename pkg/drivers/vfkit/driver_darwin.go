@@ -201,6 +201,20 @@ func (d *Driver) Start() error {
 		}
 	}
 
+	// shared directories
+	for _, sharedDir := range d.SharedDirs {
+		// TODO: add support for 'mount.ReadOnly'
+		// TODO: check format
+		dev, err := client.VirtioFsNew(sharedDir.Source, sharedDir.Tag)
+		if err != nil {
+			return err
+		}
+		err = vm.AddDevice(dev)
+		if err != nil {
+			return err
+		}
+	}
+
 	// entropy
 	dev, err = client.VirtioRNGNew()
 	if err != nil {
