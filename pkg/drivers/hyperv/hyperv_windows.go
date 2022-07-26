@@ -373,3 +373,7 @@ func (d *Driver) GetIP() (string, error) {
 
 	return resp[0], nil
 }
+
+func (d *Driver) GetSharedDirs() ([]drivers.SharedDir, error) {
+	return []drivers.SharedDir{}, nil
+}
