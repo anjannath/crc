@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -368,8 +369,10 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}
 	}
 
-	if err := configureSharedDirs(vm, sshRunner); err != nil {
-		return nil, err
+	if experimentalFeaturesEnabled(ctx) || runtime.GOOS != "linux" {
+		if err := configureSharedDirs(vm, sshRunner); err != nil {
+			return nil, err
+		}
 	}
 
 	if _, _, err := sshRunner.RunPrivileged("make root Podman socket accessible", "chmod 777 /run/podman/ /run/podman/podman.sock"); err != nil {
@@ -888,4 +891,13 @@ func addPodmanSystemConnections(c *types.ConnectionDetails) error {
 		return err
 	}
 	return nil
+}
+
+func experimentalFeaturesEnabled(ctx context.Context) bool {
+	if v := ctx.Value(constants.EnableExpFeaturesCtxKey); v != nil {
+		if enabled, ok := v.(bool); ok {
+			return enabled
+		}
+	}
+	return false
 }

@@ -93,6 +93,9 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 		}
 	}
 
+	enableExperimental := config.Get(crcConfig.ExperimentalFeatures).AsBool()
+	ctx = context.WithValue(ctx, constants.EnableExpFeaturesCtxKey, enableExperimental)
+
 	return client.Start(ctx, startConfig)
 }
 

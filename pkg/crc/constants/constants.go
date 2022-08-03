@@ -10,6 +10,8 @@ import (
 	"github.com/code-ready/crc/pkg/crc/version"
 )
 
+type EnableExpFeaturesCtxKeyType string
+
 const (
 	DefaultName     = "crc"
 	DefaultDiskSize = 31
@@ -32,6 +34,7 @@ const (
 	DefaultPodmanNamedPipe    = `\\.\pipe\crc-podman`
 	RootlessPodmanSocket      = "/run/user/1000/podman/podman.sock"
 	RootfulPodmanSocket       = "/run/podman/podman.sock"
+	EnableExpFeaturesCtxKey   = EnableExpFeaturesCtxKeyType("enable-experimental-features")
 
 	VSockGateway = "192.168.127.1"
 	VsockSSHPort = 2222
