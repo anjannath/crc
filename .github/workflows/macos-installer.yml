@@ -52,3 +52,5 @@ jobs:
         run: sleep 10
       - name: Run crc with podman preset
         run: crc start
+      - name: Try restart scenario
+        run: crc stop; crc start
