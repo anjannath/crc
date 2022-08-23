@@ -72,10 +72,10 @@
             </Directory>
             <Directory Id="ProgramMenuFolder">
                 <Component Id="StartMenuEntry" Guid="*">
-                    <Shortcut Id="TrayStartMenuEntry" 
-                            Name="Red Hat OpenShift Local" 
-                            Target="[INSTALLDIR]crc-tray.exe" 
-                            Icon="crcicon.ico" 
+                    <Shortcut Id="TrayStartMenuEntry"
+                            Name="Red Hat OpenShift Local"
+                            Target="[INSTALLDIR]crc-tray.exe"
+                            Icon="crcicon.ico"
                             WorkingDirectory="AppDataFolder">
                         <ShortcutProperty Key="System.AppUserModel.ID" Value="redhat.codereadycontainers.tray"/>
                     </Shortcut>
@@ -95,12 +95,18 @@
         <CustomAction Id="RemoveCrcDaemonTask" BinaryKey="WixCA" DllEntry="WixQuietExec" Execute="deferred" Impersonate="no" Return="ignore" />
         <SetProperty Action="CAInstallHyperv" Id="InstallHyperv" Value='"[System64Folder]dism.exe" /online /enable-feature /featureName:microsoft-hyper-v-all /NoRestart /quiet' Before="InstallHyperv" Sequence="execute"/>
         <CustomAction Id="InstallHyperv" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="ignore" />
-        <SetProperty Action="CAAddUserToHypervAdminGroup" 
-            Id="AddUserToHypervAdminGroup" 
-            Value="&quot;[POWERSHELLEXE]&quot; -NonInteractive -ExecutionPolicy Bypass -NoProfile -Command &quot;Add-LocalGroupMember -Member [LogonUser] -SID S-1-5-32-578&quot;" 
-            Before="AddUserToHypervAdminGroup" 
+        <SetProperty Action="CAAddUserToHypervAdminGroup"
+            Id="AddUserToHypervAdminGroup"
+            Value="&quot;[POWERSHELLEXE]&quot; -NonInteractive -ExecutionPolicy Bypass -NoProfile -Command &quot;Add-LocalGroupMember -Member [LogonUser] -SID S-1-5-32-578&quot;"
+            Before="AddUserToHypervAdminGroup"
             Sequence="execute"/>
         <CustomAction Id="AddUserToHypervAdminGroup" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="ignore" />
+        <SetProperty Action="CAEnableFileAndPrinterSharing"
+            Id="EnableFileAndPrinterSharing"
+            Value="&quot;[POWERSHELLEXE]&quot; -NonInteractive -ExecutionPolicy Bypass -NoProfile -Command &quot;Set-NetFirewallRule -DisplayGroup 'File And Printer Sharing' -Enabled True -Profile 'Private,Public'&quot;"
+            Before="EnableFileAndPrinterSharing"
+            Sequence="execute"/>
+        <CustomAction Id="EnableFileAndPrinterSharing" BinaryKey="WixCA" DllEntry="WixQuietExec64" Execute="deferred" Impersonate="no" Return="check" />
 
         <util:CloseApplication Id = "TrayRunning" Description="Please exit Red Hat OpenShift Local from tray and run the installation again." Target="crc-tray.exe" RebootPrompt="no" PromptToContinue="yes" />
 
@@ -111,6 +117,9 @@
             <Custom Action="InstallHyperv" Before="CreateCrcGroup"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
             <Custom Action="RemoveCrcGroupRollback" After="CreateCrcGroup"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
             <Custom Action="RemoveCrcDaemonTask" Before='RemoveFiles'>Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
+            <Custom Action="EnableFileAndPrinterSharing" After="AddUserToHypervAdminGroup"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
+            <Custom Action="CreateSMBShare" After="EnableFileAndPrinterSharing"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</Custom>
+            <Custom Action="RemoveSMBShare" Before="InstallFinalize"> Installed AND NOT PATCH AND REMOVE~="ALL" AND NOT UPGRADINGPRODUCTCODE</Custom>
             <ScheduleReboot After="InstallFinalize"> NOT Installed AND NOT REMOVE~="ALL" AND NOT WIX_UPGRADE_DETECTED</ScheduleReboot>
         </InstallExecuteSequence>
         <Feature Id="DefaultFeature" Level="1">
@@ -131,6 +140,7 @@
             <ProgressText Action="InstallHyperv">Installing Hyper-V</ProgressText>
             <ProgressText Action="AddUserToHypervAdminGroup">Adding user: [LogonUser] to Hyper-V Administrators group</ProgressText>
             <ProgressText Action="RemoveCrcDaemonTask">Removing crcDaemon task</ProgressText>
+            <ProgressText Action="EnableFileAndPrinterSharing">Enabling file and printer Sharing</ProgressText>
         </UI>
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
         <!-- this should help to propagate env var changes -->
