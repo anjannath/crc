@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"strings"
 	"time"
 
 	log "github.com/code-ready/crc/pkg/crc/logging"
@@ -372,4 +373,13 @@ func (d *Driver) GetIP() (string, error) {
 	}
 
 	return resp[0], nil
+}
+
+func (d *Driver) GetSharedDirs() ([]drivers.SharedDir, error) {
+	for _, dir := range d.SharedDirs {
+		if !smbShareExists(strings.Split(strings.TrimLeft(dir.Tag, "/"), "/")[1]) {
+			return []drivers.SharedDir{}, nil
+		}
+	}
+	return d.SharedDirs, nil
 }

@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/user"
 	"runtime"
+	"strings"
 	"text/template"
 
 	"github.com/Masterminds/semver/v3"
@@ -74,7 +76,7 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 		PullSecret:        cluster.NewInteractivePullSecretLoader(config),
 		KubeAdminPassword: config.Get(crcConfig.KubeAdminPassword).AsString(),
 		Preset:            crcConfig.GetPreset(config),
-		EnableSharedDirs:  crcConfig.ShouldEnableSharedDirs(config),
+		EnableSharedDirs:  config.Get(crcConfig.EnableSharedDirs).AsBool(),
 	}
 
 	client := newMachine()
@@ -91,6 +93,19 @@ func runStart(ctx context.Context) (*types.StartResult, error) {
 				Code: preflightFailedExitCode,
 			}
 		}
+	}
+
+	if runtime.GOOS == "windows" {
+		// config SharedDirPassword ('shared-dir-password') only exists in windows
+		startConfig.SharedDirPassword = config.Get(crcConfig.SharedDirPassword).AsString()
+		startConfig.SharedDirUsername = func() string {
+			u, err := user.Current()
+			if err != nil {
+				logging.Debugf("Error getting username needed for shared dirs: %v", err)
+				return ""
+			}
+			return strings.Split(u.Username, "\\")[1]
+		}()
 	}
 
 	return client.Start(ctx, startConfig)

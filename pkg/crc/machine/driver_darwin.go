@@ -70,3 +70,7 @@ func updateKernelArgs(vm *virtualMachine) error {
 	}
 	return vm.api.Save(vm.Host)
 }
+
+func updateDriverStruct(host *host.Host, driver *machineVf.Driver) error {
+	return nil
+}

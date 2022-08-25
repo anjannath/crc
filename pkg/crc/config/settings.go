@@ -31,6 +31,7 @@ const (
 	KubeAdminPassword       = "kubeadmin-password"
 	Preset                  = "preset"
 	EnableSharedDirs        = "enable-shared-dirs"
+	SharedDirPassword       = "shared-dir-password" // #nosec G101
 )
 
 func RegisterSettings(cfg *Config) {
@@ -75,8 +76,21 @@ func RegisterSettings(cfg *Config) {
 		"Disable update check (true/false, default: false)")
 	cfg.AddSetting(ExperimentalFeatures, false, ValidateBool, SuccessfullyApplied,
 		"Enable experimental features (true/false, default: false)")
-	// shared dir is not implemented for windows yet
-	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
+
+	// Shared directories configs
+	if runtime.GOOS == "windows" {
+		validateSmbPasswordSet := func(value interface{}) (bool, string) {
+			if cfg.Get(SharedDirPassword).IsDefault {
+				return false, fmt.Sprintf("Please set '%s' first to enable shared directories", SharedDirPassword)
+			}
+			return true, ""
+		}
+		cfg.AddSetting(SharedDirPassword, "", ValidateString, SuccessfullyApplied,
+			"Password used while using CIFS/SMB file sharing (Its the password for the current logon user)")
+
+		cfg.AddSetting(EnableSharedDirs, false, validateSmbPasswordSet, SuccessfullyApplied,
+			"Enable shared directories which mounts host's $HOME at /home in the CRC VM (true/false, default: false)")
+	} else {
 		cfg.AddSetting(EnableSharedDirs, true, ValidateBool, SuccessfullyApplied,
 			"Enable shared directories which mounts host's $HOME at /home in the CRC VM (true/false, default: true)")
 	}
@@ -137,14 +151,6 @@ func GetNetworkMode(config Storage) network.Mode {
 		return network.UserNetworkingMode
 	}
 	return network.ParseMode(config.Get(NetworkMode).AsString())
-}
-
-func ShouldEnableSharedDirs(config Storage) bool {
-	// Shared dirs are not implemented for windows
-	if runtime.GOOS == "windows" {
-		return false
-	}
-	return config.Get(EnableSharedDirs).AsBool()
 }
 
 func UpdateDefaults(cfg *Config) {

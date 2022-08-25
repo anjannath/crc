@@ -57,3 +57,22 @@ func setDiskSize(host *host.Host, diskSizeGiB int) error {
 
 	return updateDriverValue(host, diskSizeSetter)
 }
+
+func setSharedDirPassword(host *host.Host, password string) error {
+	driver, err := loadDriverConfig(host)
+	if err != nil {
+		return err
+	}
+
+	if len(driver.SharedDirs) == 0 {
+		return nil
+	}
+
+	sharedDir := []libmachine.SharedDir{}
+	for _, dir := range driver.SharedDirs {
+		dir.Password = password
+		sharedDir = append(sharedDir, dir)
+	}
+	driver.SharedDirs = sharedDir
+	return updateDriverStruct(host, driver)
+}

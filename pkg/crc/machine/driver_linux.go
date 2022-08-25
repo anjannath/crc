@@ -47,3 +47,7 @@ func (r *RPCServerDriver) SetConfigRaw(data []byte, _ *struct{}) error {
 	return json.Unmarshal(data, &r.ActualDriver)
 }
 */
+
+func updateDriverStruct(host *host.Host, driver *machineLibvirt.Driver) error {
+	return nil
+}
