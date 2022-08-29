@@ -157,6 +157,8 @@ github.com/alexbrainman/sspi v0.0.0-20180613141037-e580b900e9f5/go.mod h1:976q2E
 github.com/alexflint/go-filemutex v0.0.0-20171022225611-72bdc8eae2ae/go.mod h1:CgnQgUtFrFz9mxFNtED3jI5tLDjKlOM+oUF/sTk6ps0=
 github.com/alicebob/sqlittle v1.4.0/go.mod h1:Co1L1qxHqCwf41puWhk2HOodojR0mcsAV4BIt8byZh8=
 github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883/go.mod h1:rCTlJbsFo29Kk6CurOXKm700vrz8f0KW0JNfpkRJY/8=
+github.com/anjannath/machine v0.7.1-0.20220829061903-fb47540d2400 h1:Yy2EiTAwCFaXlMlLXbb07fKClRYPEK8L9ZWnadAsaNY=
+github.com/anjannath/machine v0.7.1-0.20220829061903-fb47540d2400/go.mod h1:zeUHkDy+CASmOmTcbvv9m5SlkXmhp0MAtcs6f7EMp68=
 github.com/anmitsu/go-shlex v0.0.0-20161002113705-648efa622239/go.mod h1:2FmKhYUyUczH0OGQWaF5ceTx0UBShxjsH6f8oGKYe2c=
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
 github.com/antlr/antlr4/runtime/Go/antlr v0.0.0-20210826220005-b48c857c3a0e/go.mod h1:F7bn7fEU90QkQ3tnmaTx3LTKLEDqnwWODIYppRQ5hnY=
@@ -248,8 +250,6 @@ github.com/code-ready/admin-helper v0.0.10 h1:J7z6cu8owR9UemZlHQXL2W1aCOfo1nGhY1
 github.com/code-ready/admin-helper v0.0.10/go.mod h1:8ACGWyeBXkVcQ53idgXhYzLGrK/+xjabcGVCtPtKaRQ=
 github.com/code-ready/clicumber v0.0.0-20210817053019-08963a832984 h1:drafV7Hm9vnZqaUMzeSNc8IAbRQH8JrV8eRIb/jCtWU=
 github.com/code-ready/clicumber v0.0.0-20210817053019-08963a832984/go.mod h1:ZPZUcYGpv/FQGnwakUuhiHP9x/IIcU2SKbn8xPe4ROc=
-github.com/code-ready/machine v0.0.0-20220727160217-7bf0dd8c2d7b h1:Eev9Enne43B+k6s2gfYxaSh0f0/+owLbrAyk8+7eoeM=
-github.com/code-ready/machine v0.0.0-20220727160217-7bf0dd8c2d7b/go.mod h1:zeUHkDy+CASmOmTcbvv9m5SlkXmhp0MAtcs6f7EMp68=
 github.com/code-ready/vfkit v0.0.2 h1:DA7wnPVXjs8bwa3ksNd8JtKzXsZ1oC1F7JanVoDyzCw=
 github.com/code-ready/vfkit v0.0.2/go.mod h1:rjWQeMUISswhWXeBp5LEzwVjv8aN3Gn1QxIHDCmxu40=
 github.com/codegangsta/cli v1.20.0/go.mod h1:/qJNoX69yVSKu5o4jLyXAENLRyk1uhi7zkbQ3slBdOA=

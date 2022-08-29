@@ -193,3 +193,5 @@ replace (
 
 	k8s.io/kubectl => github.com/openshift/kubernetes-kubectl v0.0.0-20220124124213-df787b5b471c
 )
+
+replace github.com/code-ready/machine v0.0.0-20220727160217-7bf0dd8c2d7b => github.com/anjannath/machine v0.7.1-0.20220829061903-fb47540d2400
