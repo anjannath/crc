@@ -1,6 +1,7 @@
 package network
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -44,4 +45,28 @@ func GetDefaultSwitchName() (bool, string) {
 	}
 
 	return true, strings.TrimSpace(stdOut)
+}
+
+// returns the IP from the first connected interface that has an IP address
+func GetActiveIP() (string, error) {
+	getInterfaceAliasCmd := `(Get-NetIPInterface -ConnectionState Connected -AddressFamily IPv4).InterfaceAlias`
+	stdout, _, err := powershell.Execute(getInterfaceAliasCmd)
+	if err != nil {
+		return "", fmt.Errorf("Error trying to get interface names: %w", err)
+	}
+
+	ifaces := strings.Split(stdout, "\n")
+
+	for _, iface := range ifaces {
+		if strings.Contains(strings.ToLower(iface), "loopback") {
+			continue
+		}
+
+		getIPAddrCmd := fmt.Sprintf("(Get-NetIPAddress -InterfaceAlias '%s' -AddressFamily IPv4).IPAddress", strings.TrimSpace(iface))
+		stdout, _, err := powershell.Execute(getIPAddrCmd)
+		if err == nil {
+			return strings.TrimSpace(stdout), nil
+		}
+	}
+	return "", errors.New("Unable to find an IP address assigned to any connected interface")
 }
