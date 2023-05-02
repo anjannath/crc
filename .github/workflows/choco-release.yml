@@ -1,0 +1,30 @@
+---
+name: Publish CRC choco to community feed
+on:
+  release:
+    types: [published]
+jobs:
+  build:
+    if: github.event.release.prerelease != true
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - windows-2022
+        go:
+          - 1.19
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Build the chocolatey package
+        run: make choco
+      - name: Upload nupkg artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: crc-chocolatey-nupkg
+          path: "./packaging/chocolatey/crc/*.nupkg"
