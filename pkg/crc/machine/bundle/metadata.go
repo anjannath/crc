@@ -300,7 +300,7 @@ func getBundleDownloadInfo(preset crcPreset.Preset) (*download.RemoteFile, error
 // for the default bundle of preset from the file
 func getDefaultBundleVerifiedHash(preset crcPreset.Preset) (string, error) {
 	client := &http.Client{
-		Timeout:   5 * time.Second,
+		Timeout:   10 * time.Second,
 		Transport: network.HTTPTransport(),
 	}
 	res, err := client.Get(constants.GetDefaultBundleSignedHashURL(preset))
