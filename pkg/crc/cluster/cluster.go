@@ -18,6 +18,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
 	"github.com/crc-org/crc/pkg/crc/oc"
+	"github.com/crc-org/crc/pkg/crc/preset"
 	"github.com/crc-org/crc/pkg/crc/ssh"
 	crctls "github.com/crc-org/crc/pkg/crc/tls"
 	"github.com/crc-org/crc/pkg/crc/validation"
@@ -216,7 +217,9 @@ func EnsureGeneratedClientCAPresentInTheCluster(ctx context.Context, ocConfig oc
 	if err != nil {
 		return fmt.Errorf("Failed to patch admin-kubeconfig-client-ca config map with new CA` %v: %s", err, stderr)
 	}
-	if err := sshRunner.CopyFile(constants.KubeconfigFilePath, ocConfig.KubeconfigPath, 0644); err != nil {
+	// we know this is only needed for the openshift preset
+	preset := preset.ParsePreset("openshift")
+	if err := sshRunner.CopyFile(constants.GetKubeconfigFilePath(preset), ocConfig.KubeconfigPath, 0644); err != nil {
 		return fmt.Errorf("Failed to copy generated kubeconfig file to VM: %v", err)
 	}
 

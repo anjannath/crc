@@ -3,6 +3,7 @@ package machine
 import (
 	"github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/crc-org/crc/pkg/crc/machine/state"
+	"github.com/crc-org/crc/pkg/crc/preset"
 	crcPreset "github.com/crc-org/crc/pkg/crc/preset"
 	"github.com/crc-org/crc/pkg/crc/systemd"
 	"github.com/pkg/errors"
@@ -18,12 +19,12 @@ func (client *client) Stop() (state.State, error) {
 	}
 	defer vm.Close()
 	if client.GetPreset() == crcPreset.OpenShift {
-		if err := stopAllContainers(vm); err != nil {
+		if err := stopAllContainers(vm, client.GetPreset()); err != nil {
 			logging.Warnf("Failed to stop all OpenShift containers.\nShutting down VM...")
 			logging.Debugf("%v", err)
 		}
 	}
-	if err := updateKernelArgs(vm); err != nil {
+	if err := updateKernelArgs(vm, client.GetPreset()); err != nil {
 		logging.Debugf("%v", err)
 	}
 	logging.Info("Stopping the instance, this may take a few minutes...")
@@ -45,9 +46,9 @@ func (client *client) Stop() (state.State, error) {
 // is fixed. We should also ignore the openshift specific errors because stop
 // operation shouldn't depend on the openshift side. Without this graceful shutdown
 // takes around 6-7 mins.
-func stopAllContainers(vm *virtualMachine) error {
+func stopAllContainers(vm *virtualMachine, preset preset.Preset) error {
 	logging.Info("Stopping kubelet and all containers...")
-	sshRunner, err := vm.SSHRunner()
+	sshRunner, err := vm.SSHRunner(preset)
 	if err != nil {
 		return errors.Wrapf(err, "Error creating the ssh client")
 	}

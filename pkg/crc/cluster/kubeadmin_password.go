@@ -14,13 +14,14 @@ import (
 	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/crc-org/crc/pkg/crc/oc"
+	"github.com/crc-org/crc/pkg/crc/preset"
 	"golang.org/x/crypto/bcrypt"
 )
 
 // GenerateKubeAdminUserPassword creates and put updated kubeadmin password to ~/.crc/machine/crc/kubeadmin-password
-func GenerateKubeAdminUserPassword() error {
+func GenerateKubeAdminUserPassword(preset preset.Preset) error {
 	logging.Infof("Generating new password for the kubeadmin user")
-	kubeAdminPasswordFile := constants.GetKubeAdminPasswordPath()
+	kubeAdminPasswordFile := constants.GetKubeAdminPasswordPath(preset)
 	kubeAdminPassword, err := GenerateRandomPasswordHash(23)
 	if err != nil {
 		return fmt.Errorf("Cannot generate the kubeadmin user password: %w", err)
@@ -29,15 +30,15 @@ func GenerateKubeAdminUserPassword() error {
 }
 
 // UpdateKubeAdminUserPassword updates the htpasswd secret
-func UpdateKubeAdminUserPassword(ctx context.Context, ocConfig oc.Config, newPassword string) error {
+func UpdateKubeAdminUserPassword(ctx context.Context, ocConfig oc.Config, newPassword string, preset preset.Preset) error {
 	if newPassword != "" {
 		logging.Infof("Overriding password for kubeadmin user")
-		if err := os.WriteFile(constants.GetKubeAdminPasswordPath(), []byte(strings.TrimSpace(newPassword)), 0600); err != nil {
+		if err := os.WriteFile(constants.GetKubeAdminPasswordPath(preset), []byte(strings.TrimSpace(newPassword)), 0600); err != nil {
 			return err
 		}
 	}
 
-	kubeAdminPassword, err := GetKubeadminPassword()
+	kubeAdminPassword, err := GetKubeadminPassword(preset)
 	if err != nil {
 		return fmt.Errorf("Cannot read the kubeadmin user password from file: %w", err)
 	}
@@ -77,8 +78,8 @@ func UpdateKubeAdminUserPassword(ctx context.Context, ocConfig oc.Config, newPas
 	return nil
 }
 
-func GetKubeadminPassword() (string, error) {
-	kubeAdminPasswordFile := constants.GetKubeAdminPasswordPath()
+func GetKubeadminPassword(preset preset.Preset) (string, error) {
+	kubeAdminPasswordFile := constants.GetKubeAdminPasswordPath(preset)
 	rawData, err := os.ReadFile(kubeAdminPasswordFile)
 	if err != nil {
 		return "", err

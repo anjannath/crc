@@ -9,11 +9,12 @@ import (
 	"github.com/crc-org/crc/pkg/crc/machine/bundle"
 	"github.com/crc-org/crc/pkg/crc/machine/types"
 	"github.com/crc-org/crc/pkg/crc/network/httpproxy"
+	"github.com/crc-org/crc/pkg/crc/preset"
 	"github.com/crc-org/crc/pkg/libmachine"
 	"github.com/crc-org/machine/libmachine/drivers"
 )
 
-func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*types.ClusterConfig, error) {
+func getClusterConfig(bundleInfo *bundle.CrcBundleInfo, preset preset.Preset) (*types.ClusterConfig, error) {
 	if !bundleInfo.IsOpenShift() {
 		return &types.ClusterConfig{
 			ClusterType: bundleInfo.GetBundleType(),
@@ -21,7 +22,7 @@ func getClusterConfig(bundleInfo *bundle.CrcBundleInfo) (*types.ClusterConfig, e
 		}, nil
 	}
 
-	kubeadminPassword, err := cluster.GetKubeadminPassword()
+	kubeadminPassword, err := cluster.GetKubeadminPassword(preset)
 	if err != nil {
 		return nil, fmt.Errorf("Error reading kubeadmin password from bundle %v", err)
 	}

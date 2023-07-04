@@ -6,6 +6,7 @@ import (
 
 	"github.com/crc-org/crc/pkg/crc/machine/config"
 	"github.com/crc-org/crc/pkg/crc/machine/hyperv"
+	"github.com/crc-org/crc/pkg/crc/preset"
 	machineHyperv "github.com/crc-org/crc/pkg/drivers/hyperv"
 	"github.com/crc-org/crc/pkg/libmachine"
 	"github.com/crc-org/crc/pkg/libmachine/host"
@@ -34,7 +35,7 @@ func updateDriverConfig(host *host.Host, driver *machineHyperv.Driver) error {
 	return host.UpdateConfig(driverData)
 }
 
-func updateKernelArgs(vm *virtualMachine) error {
+func updateKernelArgs(vm *virtualMachine, preset preset.Preset) error {
 	return nil
 }
 

@@ -72,7 +72,7 @@ func (client *client) GenerateBundle(forceStop bool) error {
 		return err
 	}
 
-	if err := copier.CopyPrivateSSHKey(constants.GetPrivateKeyPath()); err != nil {
+	if err := copier.CopyPrivateSSHKey(constants.GetPrivateKeyPath(client.GetPreset())); err != nil {
 		return err
 	}
 
@@ -83,7 +83,7 @@ func (client *client) GenerateBundle(forceStop bool) error {
 	// Copy disk image
 	logging.Infof("Copying the disk image to %s", customBundleNameWithoutExtension)
 	logging.Debugf("Absolute path of custom bundle directory: %s", customBundleDir)
-	diskPath, diskFormat, err := copyDiskImage(customBundleDir)
+	diskPath, diskFormat, err := copyDiskImage(customBundleDir, client.GetPreset())
 	if err != nil {
 		return err
 	}
@@ -119,7 +119,7 @@ func loadVM(client *client) (*bundle.CrcBundleInfo, *crcssh.Runner, error) {
 		return nil, nil, errors.New("machine is not running")
 	}
 
-	sshRunner, err := vm.SSHRunner()
+	sshRunner, err := vm.SSHRunner(client.GetPreset())
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Error creating the ssh client")
 	}

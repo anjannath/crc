@@ -344,7 +344,7 @@ func writeMicroShiftTemplatedMessage(writer io.Writer, s *startResult) error {
 	return parsed.Execute(writer, &templateVariables{
 		EvalCommandLine:   shell.GenerateUsageHint(userShell, "crc oc-env"),
 		CommandLinePrefix: commandLinePrefix(userShell),
-		KubeConfigPath:    constants.KubeconfigFilePath,
+		KubeConfigPath:    constants.GetKubeconfigFilePath(preset.Microshift),
 	})
 }
 

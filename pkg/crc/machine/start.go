@@ -358,7 +358,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 				Status: vmState,
 			}, nil
 		}
-		clusterConfig, err := getClusterConfig(vm.bundle)
+		clusterConfig, err := getClusterConfig(vm.bundle, client.GetPreset())
 		if err != nil {
 			return nil, errors.Wrap(err, "Cannot create cluster configuration")
 		}
@@ -405,7 +405,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Error getting the IP")
 	}
 	logging.Infof("CRC instance is running with IP %s", instanceIP)
-	sshRunner, err := vm.SSHRunner()
+	sshRunner, err := vm.SSHRunner(client.GetPreset())
 	if err != nil {
 		return nil, errors.Wrap(err, "Error creating the ssh client")
 	}
@@ -419,7 +419,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 
 	// Post VM start immediately update SSH key and copy kubeconfig to instance
 	// dir and VM
-	if err := updateSSHKeyPair(sshRunner); err != nil {
+	if err := updateSSHKeyPair(sshRunner, client.GetPreset()); err != nil {
 		return nil, errors.Wrap(err, "Error updating public key")
 	}
 
@@ -479,7 +479,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			return nil, errors.Wrap(err, "Failed to add podman host dns entry")
 		}
 
-		if err := updateCockpitConsoleBearerToken(sshRunner); err != nil {
+		if err := updateCockpitConsoleBearerToken(sshRunner, client.GetPreset()); err != nil {
 			return nil, fmt.Errorf("Failed to rotate bearer token for cockpit webconsole: %w", err)
 		}
 
@@ -555,7 +555,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 			}
 		}
 		logging.Info("Adding microshift context to kubeconfig...")
-		if err := mergeKubeConfigFile(constants.KubeconfigFilePath); err != nil {
+		if err := mergeKubeConfigFile(constants.GetKubeconfigFilePath(client.GetPreset())); err != nil {
 			return nil, err
 		}
 
@@ -601,7 +601,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Failed to update cluster pull secret")
 	}
 
-	if err := cluster.EnsureSSHKeyPresentInTheCluster(ctx, ocConfig, constants.GetPublicKeyPath()); err != nil {
+	if err := cluster.EnsureSSHKeyPresentInTheCluster(ctx, ocConfig, constants.GetPublicKeyPath(client.GetPreset())); err != nil {
 		return nil, errors.Wrap(err, "Failed to update ssh public key to machine config")
 	}
 
@@ -609,7 +609,7 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		return nil, errors.Wrap(err, "Failed to update pull secret on the disk")
 	}
 
-	if err := cluster.UpdateKubeAdminUserPassword(ctx, ocConfig, startConfig.KubeAdminPassword); err != nil {
+	if err := cluster.UpdateKubeAdminUserPassword(ctx, ocConfig, startConfig.KubeAdminPassword, client.GetPreset()); err != nil {
 		return nil, errors.Wrap(err, "Failed to update kubeadmin user password")
 	}
 
@@ -653,18 +653,18 @@ func (client *client) Start(ctx context.Context, startConfig types.StartConfig) 
 		}
 	}
 
-	if err := updateKubeconfig(ctx, ocConfig, sshRunner, vm.bundle.GetKubeConfigPath()); err != nil {
+	if err := updateKubeconfig(ctx, ocConfig, sshRunner, vm.bundle.GetKubeConfigPath(), client.GetPreset()); err != nil {
 		return nil, errors.Wrap(err, "Failed to update kubeconfig file")
 	}
 
 	logging.Infof("Starting %s instance... [waiting for the cluster to stabilize]", startConfig.Preset)
-	if err := cluster.WaitForClusterStable(ctx, instanceIP, constants.KubeconfigFilePath, proxyConfig); err != nil {
+	if err := cluster.WaitForClusterStable(ctx, instanceIP, constants.GetKubeconfigFilePath(client.GetPreset()), proxyConfig); err != nil {
 		logging.Errorf("Cluster is not ready: %v", err)
 	}
 
 	waitForProxyPropagation(ctx, ocConfig, proxyConfig)
 
-	clusterConfig, err := getClusterConfig(vm.bundle)
+	clusterConfig, err := getClusterConfig(vm.bundle, client.GetPreset())
 	if err != nil {
 		return nil, errors.Wrap(err, "Cannot get cluster configuration")
 	}
@@ -735,11 +735,11 @@ func createHost(machineConfig config.MachineConfig, preset crcPreset.Preset) err
 	}
 
 	logging.Info("Generating new SSH key pair...")
-	if err := crcssh.GenerateSSHKey(constants.GetPrivateKeyPath()); err != nil {
+	if err := crcssh.GenerateSSHKey(constants.GetPrivateKeyPath(preset)); err != nil {
 		return fmt.Errorf("Error generating ssh key pair: %v", err)
 	}
 	if preset == crcPreset.OpenShift || preset == crcPreset.OKD {
-		if err := cluster.GenerateKubeAdminUserPassword(); err != nil {
+		if err := cluster.GenerateKubeAdminUserPassword(preset); err != nil {
 			return errors.Wrap(err, "Error generating new kubeadmin password")
 		}
 	}
@@ -784,9 +784,9 @@ func addNameServerToInstance(sshRunner *crcssh.Runner, ns string) error {
 	return nil
 }
 
-func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
+func updateSSHKeyPair(sshRunner *crcssh.Runner, preset crcPreset.Preset) error {
 	// Read generated public key
-	publicKey, err := os.ReadFile(constants.GetPublicKeyPath())
+	publicKey, err := os.ReadFile(constants.GetPublicKeyPath(preset))
 	if err != nil {
 		return err
 	}
@@ -807,8 +807,8 @@ func updateSSHKeyPair(sshRunner *crcssh.Runner) error {
 	return nil
 }
 
-func copyKubeconfigFileWithUpdatedUserClientCertAndKey(selfSignedCAKey *rsa.PrivateKey, selfSignedCACert *x509.Certificate, srcKubeConfigPath, dstKubeConfigPath string) error {
-	if _, err := os.Stat(constants.KubeconfigFilePath); err == nil {
+func copyKubeconfigFileWithUpdatedUserClientCertAndKey(selfSignedCAKey *rsa.PrivateKey, selfSignedCACert *x509.Certificate, srcKubeConfigPath, dstKubeConfigPath string, preset crcPreset.Preset) error {
+	if _, err := os.Stat(constants.GetKubeconfigFilePath(preset)); err == nil {
 		return nil
 	}
 	clientKey, clientCert, err := crctls.GenerateClientCertificate(selfSignedCAKey, selfSignedCACert)
@@ -952,15 +952,15 @@ func getRouterControllerImage(preset crcPreset.Preset, bundleInfo *bundle.CrcBun
 	return "quay.io/crcont/routes-controller:latest"
 }
 
-func updateKubeconfig(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh.Runner, kubeconfigFilePath string) error {
+func updateKubeconfig(ctx context.Context, ocConfig oc.Config, sshRunner *crcssh.Runner, kubeconfigFilePath string, preset crcPreset.Preset) error {
 	selfSignedCAKey, selfSignedCACert, err := crctls.GetSelfSignedCA()
 	if err != nil {
 		return errors.Wrap(err, "Not able to generate root CA key and Cert")
 	}
-	if err := copyKubeconfigFileWithUpdatedUserClientCertAndKey(selfSignedCAKey, selfSignedCACert, kubeconfigFilePath, constants.KubeconfigFilePath); err != nil {
-		return errors.Wrapf(err, "Failed to copy kubeconfig file: %s", constants.KubeconfigFilePath)
+	if err := copyKubeconfigFileWithUpdatedUserClientCertAndKey(selfSignedCAKey, selfSignedCACert, kubeconfigFilePath, constants.GetKubeconfigFilePath(preset), preset); err != nil {
+		return errors.Wrapf(err, "Failed to copy kubeconfig file: %s", constants.GetKubeconfigFilePath(preset))
 	}
-	adminClientCA, err := adminClientCertificate(constants.KubeconfigFilePath)
+	adminClientCA, err := adminClientCertificate(constants.GetKubeconfigFilePath(preset))
 	if err != nil {
 		return errors.Wrap(err, "Not able to get user CA")
 	}
@@ -977,10 +977,10 @@ func bundleMismatchWithPreset(preset crcPreset.Preset, bundleMetadata *bundle.Cr
 	return nil
 }
 
-func updateCockpitConsoleBearerToken(sshRunner *crcssh.Runner) error {
+func updateCockpitConsoleBearerToken(sshRunner *crcssh.Runner, preset crcPreset.Preset) error {
 	logging.Info("Adding new bearer token for cockpit webconsole")
 
-	tokenPath := filepath.Join(constants.MachineInstanceDir, constants.DefaultName, "cockpit-bearer-token")
+	tokenPath := filepath.Join(constants.MachineInstanceDir, constants.GetInstanceName(preset), "cockpit-bearer-token")
 	token := cluster.GenerateCockpitBearerToken()
 
 	if err := os.WriteFile(tokenPath, []byte(token), 0600); err != nil {
@@ -1015,16 +1015,17 @@ func startMicroshift(ctx context.Context, sshRunner *crcssh.Runner, ocConfig oc.
 	if err != nil {
 		return err
 	}
+	preset := crcPreset.ParsePreset("microshift")
 	if err := sshRunner.CopyDataPrivileged([]byte(content), "/etc/crio/openshift-pull-secret", 0600); err != nil {
 		return err
 	}
 	if _, _, err := sshRunner.RunPrivileged("Starting microshift service", "systemctl", "start", "microshift"); err != nil {
 		return err
 	}
-	if err := sshRunner.CopyFileFromVM(fmt.Sprintf("/var/lib/microshift/resources/kubeadmin/api%s/kubeconfig", constants.ClusterDomain), constants.KubeconfigFilePath, 0600); err != nil {
+	if err := sshRunner.CopyFileFromVM(fmt.Sprintf("/var/lib/microshift/resources/kubeadmin/api%s/kubeconfig", constants.ClusterDomain), constants.GetKubeconfigFilePath(preset), 0600); err != nil {
 		return err
 	}
-	if err := sshRunner.CopyFile(constants.KubeconfigFilePath, "/opt/kubeconfig", 0644); err != nil {
+	if err := sshRunner.CopyFile(constants.GetKubeconfigFilePath(preset), "/opt/kubeconfig", 0644); err != nil {
 		return err
 	}
 

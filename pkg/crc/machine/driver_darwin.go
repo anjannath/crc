@@ -7,6 +7,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/logging"
 	"github.com/crc-org/crc/pkg/crc/machine/config"
 	"github.com/crc-org/crc/pkg/crc/machine/vfkit"
+	crcPreset "github.com/crc-org/crc/pkg/crc/preset"
 	machineVf "github.com/crc-org/crc/pkg/drivers/vfkit"
 	"github.com/crc-org/crc/pkg/libmachine"
 	"github.com/crc-org/crc/pkg/libmachine/host"
@@ -37,9 +38,9 @@ func updateDriverConfig(host *host.Host, driver *machineVf.Driver) error {
 	return host.UpdateConfig(driverData)
 }
 
-func updateKernelArgs(vm *virtualMachine) error {
+func updateKernelArgs(vm *virtualMachine, preset crcPreset.Preset) error {
 	logging.Info("Updating kernel args...")
-	sshRunner, err := vm.SSHRunner()
+	sshRunner, err := vm.SSHRunner(preset)
 	if err != nil {
 		return err
 	}

@@ -7,6 +7,7 @@ import (
 
 	"github.com/crc-org/crc/pkg/crc/machine/config"
 	"github.com/crc-org/crc/pkg/crc/machine/libvirt"
+	"github.com/crc-org/crc/pkg/crc/preset"
 	"github.com/crc-org/crc/pkg/libmachine"
 	"github.com/crc-org/crc/pkg/libmachine/host"
 	machineLibvirt "github.com/crc-org/machine/drivers/libvirt"
@@ -39,7 +40,7 @@ func updateDriverConfig(host *host.Host, driver *machineLibvirt.Driver) error {
 	return host.UpdateConfig(driverData)
 }
 
-func updateKernelArgs(vm *virtualMachine) error {
+func updateKernelArgs(vm *virtualMachine, preset preset.Preset) error {
 	return nil
 }
 

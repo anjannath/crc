@@ -6,6 +6,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/crc-org/crc/pkg/crc/machine/bundle"
 	"github.com/crc-org/crc/pkg/crc/machine/state"
+	"github.com/crc-org/crc/pkg/crc/preset"
 	"github.com/crc-org/crc/pkg/crc/ssh"
 	"github.com/crc-org/crc/pkg/libmachine"
 	libmachinehost "github.com/crc-org/crc/pkg/libmachine/host"
@@ -101,10 +102,10 @@ func (vm *virtualMachine) SSHPort() int {
 	return constants.DefaultSSHPort
 }
 
-func (vm *virtualMachine) SSHRunner() (*ssh.Runner, error) {
+func (vm *virtualMachine) SSHRunner(preset preset.Preset) (*ssh.Runner, error) {
 	ip, err := vm.IP()
 	if err != nil {
 		return nil, err
 	}
-	return ssh.CreateRunner(ip, vm.SSHPort(), constants.GetPrivateKeyPath(), constants.GetRsaPrivateKeyPath(), vm.bundle.GetSSHKeyPath())
+	return ssh.CreateRunner(ip, vm.SSHPort(), constants.GetPrivateKeyPath(preset), constants.GetRsaPrivateKeyPath(preset), vm.bundle.GetSSHKeyPath())
 }

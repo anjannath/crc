@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"runtime"
 
+	crcConfig "github.com/crc-org/crc/pkg/crc/config"
 	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/crc-org/crc/pkg/os/shell"
 	"github.com/spf13/cobra"
@@ -52,8 +53,10 @@ func runPodmanEnv() error {
 			socket)))
 	// Todo: This need to fixed by using named pipe for windows
 	// https://docs.docker.com/desktop/faqs/#how-do-i-connect-to-the-remote-docker-engine-api
+
+	preset := crcConfig.GetPreset(config)
 	if runtime.GOOS != "windows" {
-		fmt.Println(shell.GetEnvString(userShell, "DOCKER_HOST", fmt.Sprintf("unix://%s", constants.GetHostDockerSocketPath())))
+		fmt.Println(shell.GetEnvString(userShell, "DOCKER_HOST", fmt.Sprintf("unix://%s", constants.GetHostDockerSocketPath(preset))))
 	} else {
 		fmt.Println(shell.GetEnvString(userShell, "DOCKER_HOST", "npipe:////./pipe/crc-podman"))
 	}

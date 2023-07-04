@@ -114,7 +114,7 @@ func (client *client) GetClusterLoad() (*types.ClusterLoadResult, error) {
 
 func (client *client) getDiskDetails(vm *virtualMachine) (int64, int64) {
 	disk, err, _ := client.diskDetails.Memoize("disks", func() (interface{}, error) {
-		sshRunner, err := vm.SSHRunner()
+		sshRunner, err := vm.SSHRunner(client.GetPreset())
 		if err != nil {
 			return nil, errors.Wrap(err, "Error creating the ssh client")
 		}
@@ -133,7 +133,8 @@ func (client *client) getDiskDetails(vm *virtualMachine) (int64, int64) {
 }
 
 func getOpenShiftStatus(ctx context.Context, ip string) types.OpenshiftStatus {
-	status, err := cluster.GetClusterOperatorsStatus(ctx, ip, constants.KubeconfigFilePath)
+	preset := preset.ParsePreset("openshift")
+	status, err := cluster.GetClusterOperatorsStatus(ctx, ip, constants.GetKubeconfigFilePath(preset))
 	if err != nil {
 		logging.Debugf("cannot get OpenShift status: %v", err)
 		return types.OpenshiftUnreachable
@@ -142,7 +143,8 @@ func getOpenShiftStatus(ctx context.Context, ip string) types.OpenshiftStatus {
 }
 
 func getMicroShiftStatus(ctx context.Context, ip string) types.OpenshiftStatus {
-	status, err := cluster.GetClusterNodeStatus(ctx, ip, constants.KubeconfigFilePath)
+	preset := preset.ParsePreset("microshift")
+	status, err := cluster.GetClusterNodeStatus(ctx, ip, constants.GetKubeconfigFilePath(preset))
 	if err != nil {
 		logging.Debugf("failed to get microshift node status: %v", err)
 		return types.OpenshiftUnreachable
@@ -164,7 +166,7 @@ func getStatus(status *cluster.Status) types.OpenshiftStatus {
 
 func (client *client) getRAMStatus(vm *virtualMachine) (int64, int64) {
 	ram, err, _ := client.ramDetails.Memoize("ram", func() (interface{}, error) {
-		sshRunner, err := vm.SSHRunner()
+		sshRunner, err := vm.SSHRunner(client.GetPreset())
 		if err != nil {
 			return nil, errors.Wrap(err, "Error creating the ssh client")
 		}
@@ -185,7 +187,7 @@ func (client *client) getRAMStatus(vm *virtualMachine) (int64, int64) {
 }
 
 func (client *client) getCPUStatus(vm *virtualMachine) []int64 {
-	sshRunner, err := vm.SSHRunner()
+	sshRunner, err := vm.SSHRunner(client.GetPreset())
 	if err != nil {
 		logging.Debugf("Cannot get SSH runner: %v", err)
 		return []int64{}
