@@ -7,6 +7,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/api/client"
 	"github.com/crc-org/crc/pkg/crc/cluster"
 	crcConfig "github.com/crc-org/crc/pkg/crc/config"
+	"github.com/crc-org/crc/pkg/crc/constants"
 	"github.com/crc-org/crc/pkg/crc/errors"
 	"github.com/crc-org/crc/pkg/crc/machine"
 	"github.com/crc-org/crc/pkg/crc/machine/types"
@@ -49,7 +50,13 @@ func NewHandler(config *crcConfig.Config, machine machine.Client, logger Logger,
 	}
 }
 
+func (h *Handler) prepareMachineClient() {
+	preset := crcConfig.GetPreset(h.Config)
+	h.Client = machine.NewSynchronizedMachine(machine.NewClient(constants.GetInstanceName(preset), true, h.Config))
+}
+
 func (h *Handler) Status(c *context) error {
+	h.prepareMachineClient()
 	exists, err := h.Client.Exists()
 	if err != nil {
 		return err
@@ -76,6 +83,7 @@ func (h *Handler) Status(c *context) error {
 }
 
 func (h *Handler) Stop(c *context) error {
+	h.prepareMachineClient()
 	_, err := h.Client.Stop()
 	if err != nil {
 		return err
@@ -106,6 +114,7 @@ func (h *Handler) Start(c *context) error {
 	}
 
 	startConfig := getStartConfig(h.Config, parsedArgs)
+	h.prepareMachineClient()
 	res, err := h.Client.Start(gocontext.Background(), startConfig)
 	if err != nil {
 		return err
@@ -143,6 +152,7 @@ func (h *Handler) GetVersion(c *context) error {
 }
 
 func (h *Handler) Delete(c *context) error {
+	h.prepareMachineClient()
 	err := h.Client.Delete()
 	if err != nil {
 		return err
