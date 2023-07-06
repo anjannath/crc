@@ -109,7 +109,7 @@ var (
 	MachineCacheDir    = filepath.Join(MachineBaseDir, "cache")
 	MachineInstanceDir = filepath.Join(MachineBaseDir, "machines")
 	DaemonSocketPath   = filepath.Join(CrcBaseDir, "crc.sock")
-	KubeconfigFilePath = filepath.Join(MachineInstanceDir, DefaultName, "kubeconfig")
+	KubeconfigFilePath = filepath.Join(MachineInstanceDir, InstanceDirName(), "kubeconfig")
 )
 
 func InstanceDirName() string {
@@ -173,24 +173,24 @@ func EnsureBaseDirectoriesExist() error {
 }
 
 func GetPublicKeyPath() string {
-	return filepath.Join(MachineInstanceDir, DefaultName, "id_ecdsa.pub")
+	return filepath.Join(MachineInstanceDir, InstanceDirName(), "id_ecdsa.pub")
 }
 
 func GetPrivateKeyPath() string {
-	return filepath.Join(MachineInstanceDir, DefaultName, "id_ecdsa")
+	return filepath.Join(MachineInstanceDir, InstanceDirName(), "id_ecdsa")
 }
 
 func GetHostDockerSocketPath() string {
-	return filepath.Join(MachineInstanceDir, DefaultName, "docker.sock")
+	return filepath.Join(MachineInstanceDir, InstanceDirName(), "docker.sock")
 }
 
 // For backward compatibility to v 1.20.0
 func GetRsaPrivateKeyPath() string {
-	return filepath.Join(MachineInstanceDir, DefaultName, "id_rsa")
+	return filepath.Join(MachineInstanceDir, InstanceDirName(), "id_rsa")
 }
 
 func GetKubeAdminPasswordPath() string {
-	return filepath.Join(MachineInstanceDir, DefaultName, "kubeadmin-password")
+	return filepath.Join(MachineInstanceDir, InstanceDirName(), "kubeadmin-password")
 }
 
 // TODO: follow the same pattern as oc and podman above
