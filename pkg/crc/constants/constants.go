@@ -112,6 +112,14 @@ var (
 	KubeconfigFilePath = filepath.Join(MachineInstanceDir, DefaultName, "kubeconfig")
 )
 
+func InstanceDirName() string {
+	return InstanceName()
+}
+
+func InstanceName() string {
+	return "crc"
+}
+
 func GetDefaultBundlePath(preset crcpreset.Preset) string {
 	return filepath.Join(MachineCacheDir, GetDefaultBundle(preset))
 }
