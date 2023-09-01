@@ -51,6 +51,8 @@ func readProxyCAData(proxyCAFile string) (string, error) {
 	return crcstrings.TrimTrailingEOL(string(proxyCACert)), nil
 }
 
+// NewProxyDefaults creates a proxy configuration with the specified parameters. If an empty string is passed
+// the corresponding environment variable is checked.
 func NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile string) (*ProxyConfig, error) {
 	proxyCAData, err := readProxyCAData(proxyCAFile)
 	if err != nil {
@@ -66,10 +68,14 @@ func NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile string) (*Prox
 	envProxy := httpproxy.FromEnvironment()
 
 	if DefaultProxy.HTTPProxy == "" {
-		DefaultProxy.HTTPProxy = envProxy.HTTPProxy
+		if err := ValidateProxyURL(envProxy.HTTPProxy, false); err == nil {
+			DefaultProxy.HTTPProxy = envProxy.HTTPProxy
+		}
 	}
 	if DefaultProxy.HTTPSProxy == "" {
-		DefaultProxy.HTTPSProxy = envProxy.HTTPSProxy
+		if err := ValidateProxyURL(envProxy.HTTPSProxy, true); err == nil {
+			DefaultProxy.HTTPSProxy = envProxy.HTTPSProxy
+		}
 	}
 	if noProxy == "" {
 		noProxy = envProxy.NoProxy
@@ -79,8 +85,6 @@ func NewProxyDefaults(httpProxy, httpsProxy, noProxy, proxyCAFile string) (*Prox
 	return NewProxyConfig()
 }
 
-// NewProxyConfig creates a proxy configuration with the specified parameters. If an empty string is passed
-// the corresponding environment variable is checked.
 func NewProxyConfig() (*ProxyConfig, error) {
 	config := ProxyConfig{
 		HTTPProxy:   DefaultProxy.HTTPProxy,
