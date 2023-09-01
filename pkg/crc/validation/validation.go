@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/crc-org/crc/pkg/crc/constants"
@@ -62,7 +63,7 @@ func ValidateBundlePath(bundlePath string, preset crcpreset.Preset) error {
 		var urlError *url.Error
 		// Some local paths (for example relative paths) can't be parsed/validated by `ValidateURL` and will be validated here
 		if errors.As(err, &urlError) {
-			if err1 := ValidatePath(bundlePath); err1 != nil {
+			if err1 := ValidatePath(bundlePath, false); err1 != nil {
 				return err1
 			}
 		} else {
@@ -120,12 +121,12 @@ func ValidateURL(uri string) error {
 	// If uri string is without scheme then check if it is a valid absolute path.
 	// Relative paths will cause `ParseRequestURI` to error out, and will be handled in `ValidateBundlePath`
 	case !u.IsAbs():
-		return ValidatePath(uri)
+		return ValidatePath(uri, false)
 	// In case of windows where path started with C:\<path> the uri scheme would be `C`
 	// We are going to check if the uri scheme is a single letter and assume that it is windows drive path url
 	// and send it to ValidatePath
 	case len(u.Scheme) == 1:
-		return ValidatePath(uri)
+		return ValidatePath(uri, false)
 	case u.Scheme == "http", u.Scheme == "https":
 		return nil
 	case u.Scheme == "docker":
@@ -137,17 +138,23 @@ func ValidateURL(uri string) error {
 
 type InvalidPath struct {
 	path string
+	abs  bool
 }
 
 func (e *InvalidPath) Error() string {
+	if !e.abs {
+		return fmt.Sprintf("file path: '%s' is not an absolute path", e.path)
+	}
 	return fmt.Sprintf("file '%s' does not exist", e.path)
-
 }
 
 // ValidatePath check if provide path is exist
-func ValidatePath(path string) error {
+func ValidatePath(path string, shouldBeAbsolute bool) error {
+	if shouldBeAbsolute && !filepath.IsAbs(path) {
+		return &InvalidPath{path: path, abs: false}
+	}
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return &InvalidPath{path: path}
+		return &InvalidPath{path: path, abs: true}
 	}
 	return nil
 }

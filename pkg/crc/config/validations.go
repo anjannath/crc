@@ -84,7 +84,7 @@ func validateIPAddress(value interface{}) (bool, string) {
 
 // validatePath checks if provided path is exist
 func validatePath(value interface{}) (bool, string) {
-	if err := validation.ValidatePath(cast.ToString(value)); err != nil {
+	if err := validation.ValidatePath(cast.ToString(value), true); err != nil {
 		return false, err.Error()
 	}
 	return true, ""
