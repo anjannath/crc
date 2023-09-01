@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/crc-org/crc/pkg/crc/logging"
@@ -41,7 +42,7 @@ func (p *ProxyConfig) String() string {
 }
 
 func readProxyCAData(proxyCAFile string) (string, error) {
-	if proxyCAFile == "" {
+	if proxyCAFile == "" || !filepath.IsAbs(proxyCAFile) {
 		return "", nil
 	}
 	proxyCACert, err := os.ReadFile(proxyCAFile)
