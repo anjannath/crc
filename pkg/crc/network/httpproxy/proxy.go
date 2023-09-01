@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/crc-org/crc/pkg/crc/logging"
+	crcos "github.com/crc-org/crc/pkg/os"
 
 	"github.com/asaskevich/govalidator"
 	crcstrings "github.com/crc-org/crc/pkg/strings"
@@ -43,6 +44,9 @@ func (p *ProxyConfig) String() string {
 
 func readProxyCAData(proxyCAFile string) (string, error) {
 	if proxyCAFile == "" || !filepath.IsAbs(proxyCAFile) {
+		return "", nil
+	}
+	if !crcos.FileExists(proxyCAFile) {
 		return "", nil
 	}
 	proxyCACert, err := os.ReadFile(proxyCAFile)
