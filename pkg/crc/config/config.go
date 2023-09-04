@@ -15,6 +15,7 @@ const (
 )
 
 type ValueChangedFunc func(config *Config, key string, value interface{})
+type MutatorFunc func(key string, value interface{}) interface{}
 
 type Config struct {
 	storage        RawStorage
@@ -22,6 +23,7 @@ type Config struct {
 	settingsByName map[string]Setting
 
 	valueChangeNotifiers map[string]ValueChangedFunc
+	mutators             map[string]MutatorFunc
 }
 
 func New(storage, secretStorage RawStorage) *Config {
@@ -30,6 +32,7 @@ func New(storage, secretStorage RawStorage) *Config {
 		secretStorage:        secretStorage,
 		settingsByName:       make(map[string]Setting),
 		valueChangeNotifiers: map[string]ValueChangedFunc{},
+		mutators:             map[string]MutatorFunc{},
 	}
 }
 
@@ -85,6 +88,8 @@ func (c *Config) Set(key string, value interface{}) (string, error) {
 	if err := c.validate(key, value); err != nil {
 		return "", err
 	}
+	// apply any mutations if required
+	value = c.mutateValue(key, value)
 
 	var castValue interface{}
 	var err error
@@ -164,6 +169,16 @@ func (c *Config) RegisterNotifier(key string, changeNotifier ValueChangedFunc) e
 	return nil
 }
 
+func (c *Config) RegisterMutator(key string, mutator MutatorFunc) error {
+	if _, hasKey := c.mutators[key]; hasKey {
+		return fmt.Errorf("Config mutator already registered for %s", key)
+	}
+
+	c.mutators[key] = mutator
+
+	return nil
+}
+
 func (c *Config) valueChangeNotify(key string, value interface{}) {
 	changeNotifier, hasKey := c.valueChangeNotifiers[key]
 	if !hasKey {
@@ -171,6 +186,15 @@ func (c *Config) valueChangeNotify(key string, value interface{}) {
 	}
 
 	changeNotifier(c, key, value)
+}
+
+func (c *Config) mutateValue(key string, value interface{}) interface{} {
+	mutator, hasKey := c.mutators[key]
+	if !hasKey {
+		return value
+	}
+
+	return mutator(key, value)
 }
 
 func (c *Config) Get(key string) SettingValue {
@@ -186,6 +210,7 @@ func (c *Config) Get(key string) SettingValue {
 	} else {
 		value = c.storage.Get(key)
 	}
+	value = c.mutateValue(key, value)
 	if value == nil {
 		value = setting.defaultValue
 	}

@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"path/filepath"
 	"runtime"
 
 	"github.com/crc-org/crc/pkg/crc/constants"
@@ -9,6 +10,7 @@ import (
 	"github.com/crc-org/crc/pkg/crc/network"
 	"github.com/crc-org/crc/pkg/crc/preset"
 	"github.com/crc-org/crc/pkg/crc/version"
+	"github.com/spf13/cast"
 )
 
 const (
@@ -138,10 +140,25 @@ func RegisterSettings(cfg *Config) {
 	if err := cfg.RegisterNotifier(Preset, presetChanged); err != nil {
 		logging.Debugf("Failed to register notifier for Preset: %v", err)
 	}
+
+	if err := cfg.RegisterMutator(ProxyCAFile, convertToAbsPath); err != nil {
+		logging.Debugf("Failed to register Mutator function for %s: %v", ProxyCAFile, err)
+	}
 }
 
 func presetChanged(cfg *Config, _ string, _ interface{}) {
 	UpdateDefaults(cfg)
+}
+
+func convertToAbsPath(_ string, value interface{}) interface{} {
+	if value == nil {
+		return value
+	}
+	absPath, err := filepath.Abs(cast.ToString(value))
+	if err != nil {
+		return value
+	}
+	return absPath
 }
 
 func defaultCPUs(cfg Storage) int {
