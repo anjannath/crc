@@ -41,6 +41,7 @@
     <div class="panels">
 <div class="nav-panel-menu is-active" data-panel="menu">
   <nav class="nav-menu">
+    <button class="nav-menu-toggle" aria-label="Toggle expand/collapse all" style="display: none"></button>
     <h3 class="title"><a href="../introducing/">Getting started with CRC</a></h3>
 <ul class="nav-list">
   <li class="nav-item" data-depth="0">
@@ -74,16 +75,11 @@
 <div class="nav-panel-explore" data-panel="explore">
   <div class="context">
     <span class="title">Getting started with CRC</span>
-    <span class="version">default</span>
+    <span class="version"></span>
   </div>
   <ul class="components">
     <li class="component is-current">
       <a class="title" href="../introducing/">Getting started with CRC</a>
-      <ul class="versions">
-        <li class="version is-current is-latest">
-          <a href="../introducing/">default</a>
-        </li>
-      </ul>
     </li>
   </ul>
 </div>
@@ -139,7 +135,6 @@ CRC offers presets for:</p>
 <p>On Microsoft Windows and macOS, the CRC guided installer prompts you for your desired preset.
 On Linux, the OpenShift Container Platform preset is selected by default.
 You can change this selection using the <code class="command">crc config</code> command before running the <code class="command">crc setup</code> command.
-You can change your selected preset from the system tray on Microsoft Windows and macOS or from the command line on all supported operating systems.
 Only one preset can be active at a time.</p>
 </div>
 <div class="ulist _additional-resources">
