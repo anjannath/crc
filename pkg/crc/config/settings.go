@@ -93,7 +93,7 @@ func RegisterSettings(cfg *Config) {
 		"Enable experimental features (true/false, default: false)")
 	cfg.AddSetting(EmergencyLogin, false, ValidateBool, SuccessfullyApplied,
 		"Enable emergency login for 'core' user. Password is randomly generated. (true/false, default: false)")
-	cfg.AddSetting(PersistentVolumeSize, constants.DefaultPersistentVolumeSize, validatePersistentVolumeSize, SuccessfullyApplied,
+	cfg.AddSetting(PersistentVolumeSize, constants.DefaultPersistentVolumeSize, validatePersistentVolumeSize, RequiresRestartMsg,
 		fmt.Sprintf("Total size in GiB of the persistent volume used by the CSI driver for %s preset (must be greater than or equal to '%d')", preset.Microshift, constants.DefaultPersistentVolumeSize))
 
 	// Shared directories configs
