@@ -1,0 +1,31 @@
+name: Run e2e on self hosted runner
+on:
+  push:
+    branches:
+      - "main"
+    paths-ignore:
+      - 'docs/**'
+      - 'images/docs-builder/**'
+      - '*.adoc'
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - 'images/docs-builder/**'
+      - '*.adoc'
+jobs:
+  run-e2e:
+    runs-on: [Windows, self-hosted, windows-runner, X64]
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ['1.22']
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Set path for heat.exe and light.exe
+        shell: 'C:\Program Files\Git\bin\bash.exe'
+        run: make test
