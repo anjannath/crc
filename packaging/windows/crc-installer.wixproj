@@ -1,0 +1,15 @@
+<Project Sdk="WixToolset.Sdk/6.0.0">
+  <PropertyGroup>
+    <OutputType>Package</OutputType>
+    <OutputName>crc-windows-amd64</OutputName>
+    <Platform>x64</Platform>
+    <Version>2.57.0</Version>
+    <DefineConstants>$(DefineConstants);Version=$(Version)</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WixToolset.Util.wixext" Version="6.0.0" />
+    <PackageReference Include="WixToolset.UI.wixext" Version="6.0.0" />
+  </ItemGroup>
+</Project>
+
