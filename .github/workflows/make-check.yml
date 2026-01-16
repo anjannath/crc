@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - "main"
+      - "gha-run-lint"
   pull_request: {}
 jobs:
   build:
@@ -24,6 +25,8 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go }}
+      - name: Linter
+        run: make lint
       - name: Build
         run: make check
       - if: runner.os == 'Linux'
